@@ -11,6 +11,7 @@ export function HomeProviderCard({
   showReason = false,
   showWhy = false,
   onView,
+  onSelect,
 }: {
   provider: HomeProvider;
   compact?: boolean;
@@ -20,6 +21,7 @@ export function HomeProviderCard({
   showReason?: boolean;
   showWhy?: boolean;
   onView?: (provider: HomeProvider) => void;
+  onSelect?: () => void;
 }) {
   const [whyOpen, setWhyOpen] = useState(false);
 
@@ -27,6 +29,7 @@ export function HomeProviderCard({
     <article
       className={cn(
         "group relative h-full overflow-hidden rounded-lg border bg-card p-4 transition-[border-color,box-shadow,opacity,transform] duration-500 ease-out hover:-translate-y-0.5",
+        onSelect && "cursor-pointer",
         recommended
           ? "border-foreground/80 shadow-raised"
           : "border-border shadow-subtle hover:border-border-strong hover:shadow-panel",
@@ -133,6 +136,23 @@ export function HomeProviderCard({
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-foreground transition-transform duration-200 hover:translate-x-0.5"
         >
           View profile <span aria-hidden="true">→</span>
+        </button>
+      ) : null}
+
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={onSelect}
+          className={cn(
+            "mt-3 inline-flex items-center gap-1 text-xs font-medium transition-transform duration-200 hover:translate-x-0.5",
+            recommended ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {recommended ? (
+            <>Selected</>
+          ) : (
+            <>Select this provider <span aria-hidden="true">→</span></>
+          )}
         </button>
       ) : null}
     </article>

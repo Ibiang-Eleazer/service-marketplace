@@ -25,7 +25,10 @@ export type Intent = {
   tradeLabel: string;
   summary: string;
   taskTitle: string;
+  /** Initial set of most relevant providers surfaced first */
   providers: HomeProvider[];
+  /** Additional providers shown when the user asks for more */
+  moreProviders: HomeProvider[];
 };
 
 const plumbing: HomeProvider[] = [
@@ -76,6 +79,39 @@ const plumbing: HomeProvider[] = [
   },
 ];
 
+const plumbingMore: HomeProvider[] = [
+  {
+    id: "delta-plumbing",
+    name: "Delta Plumbing Solutions",
+    initials: "DP",
+    service: "Emergency plumbing & drainage",
+    distance: "5.6 km away",
+    availability: "On call / emergency",
+    rating: 4.5,
+    reviews: 312,
+    description:
+      "24/7 emergency line. Drain unblocking and burst pipe specialists.",
+    reason: "Good fallback for urgent issues outside regular hours.",
+    experience: "18 yrs",
+    skills: ["Emergency plumbing", "Drain unblocking", "Burst pipes"],
+  },
+  {
+    id: "riverside-fittings",
+    name: "Riverside Fittings",
+    initials: "RF",
+    service: "Bathroom & kitchen fittings",
+    distance: "6.8 km away",
+    availability: "Next week",
+    rating: 4.6,
+    reviews: 54,
+    description:
+      "Family-run business focused on installations and renovations.",
+    reason: "Solid option for planned renovations rather than emergencies.",
+    experience: "20 yrs",
+    skills: ["Bathroom fittings", "Renovations", "Installations"],
+  },
+];
+
 const cooling: HomeProvider[] = [
   {
     id: "coolform-technicians",
@@ -118,6 +154,39 @@ const cooling: HomeProvider[] = [
     reason: "Good value option with transparent upfront quotes.",
     experience: "6 yrs",
     skills: ["AC install", "Repairs", "Written quotes"],
+  },
+];
+
+const coolingMore: HomeProvider[] = [
+  {
+    id: "arctic-line",
+    name: "Arctic Line Services",
+    initials: "AL",
+    service: "Commercial & residential HVAC",
+    distance: "7.3 km away",
+    availability: "Next week",
+    rating: 4.4,
+    reviews: 189,
+    description:
+      "Larger outfit handling both commercial and residential systems. Contract maintenance available.",
+    reason: "Good for complex or commercial-grade cooling systems.",
+    experience: "22 yrs",
+    skills: ["Commercial HVAC", "Contract maintenance", "System design"],
+  },
+  {
+    id: "quick-chill",
+    name: "QuickChill Repairs",
+    initials: "QC",
+    service: "AC repair & servicing",
+    distance: "8.1 km away",
+    availability: "Weekends only",
+    rating: 4.5,
+    reviews: 41,
+    description:
+      "Weekend-only independent technician. Honest assessments, no upselling.",
+    reason: "Weekend availability with straightforward pricing.",
+    experience: "5 yrs",
+    skills: ["AC repair", "Servicing", "Weekend availability"],
   },
 ];
 
@@ -166,6 +235,39 @@ const electrical: HomeProvider[] = [
   },
 ];
 
+const electricalMore: HomeProvider[] = [
+  {
+    id: "power-line-electric",
+    name: "PowerLine Electrical",
+    initials: "PL",
+    service: "Full electrical & safety inspections",
+    distance: "6.2 km away",
+    availability: "Next week",
+    rating: 4.5,
+    reviews: 178,
+    description:
+      "Certified for safety inspections and full rewiring. Insurance reports available.",
+    reason: "Good for safety inspections and certified reports.",
+    experience: "19 yrs",
+    skills: ["Safety inspections", "Rewiring", "Insurance reports"],
+  },
+  {
+    id: "spark-and-co",
+    name: "Spark & Co.",
+    initials: "SC",
+    service: "Electrical & smart home",
+    distance: "7.9 km away",
+    availability: "Weekends",
+    rating: 4.6,
+    reviews: 85,
+    description:
+      "Modern electrical work including smart home setups and EV charger installation.",
+    reason: "Good for smart home and modern electrical installations.",
+    experience: "9 yrs",
+    skills: ["Smart home", "EV chargers", "Modern wiring"],
+  },
+];
+
 const cleaning: HomeProvider[] = [
   {
     id: "still-house-cleaning",
@@ -208,6 +310,39 @@ const cleaning: HomeProvider[] = [
     reason: "Well-reviewed for weekend deep cleans.",
     experience: "5 yrs",
     skills: ["Move-out", "Post-renovation", "Weekend availability"],
+  },
+];
+
+const cleaningMore: HomeProvider[] = [
+  {
+    id: "fresh-start-cleaning",
+    name: "Fresh Start Cleaning",
+    initials: "FS",
+    service: "Eco-friendly cleaning",
+    distance: "5.9 km away",
+    availability: "Next week",
+    rating: 4.7,
+    reviews: 134,
+    description:
+      "Eco-friendly products, pet-safe. Recurring and one-off deep cleans.",
+    reason: "Good choice if you prefer eco-friendly, pet-safe products.",
+    experience: "7 yrs",
+    skills: ["Eco-friendly", "Pet-safe", "Deep cleans"],
+  },
+  {
+    id: "shine-team",
+    name: "Shine Team",
+    initials: "ST",
+    service: "Office & home cleaning",
+    distance: "7.1 km away",
+    availability: "Weekdays only",
+    rating: 4.4,
+    reviews: 256,
+    description:
+      "Larger team that handles both offices and homes. Flexible scheduling on weekdays.",
+    reason: "Good for larger homes or weekday-only schedules.",
+    experience: "13 yrs",
+    skills: ["Large homes", "Office cleaning", "Weekday scheduling"],
   },
 ];
 
@@ -256,6 +391,39 @@ const assembly: HomeProvider[] = [
   },
 ];
 
+const assemblyMore: HomeProvider[] = [
+  {
+    id: "flatpack-pros",
+    name: "FlatPack Pros",
+    initials: "FP",
+    service: "Flat-pack assembly specialists",
+    distance: "6.5 km away",
+    availability: "Next week",
+    rating: 4.5,
+    reviews: 312,
+    description:
+      "Assembly-only service. Fast, efficient, and experienced with all major brands.",
+    reason: "Efficient assembly-only service for straightforward jobs.",
+    experience: "8 yrs",
+    skills: ["Flat-pack", "All brands", "Fast turnaround"],
+  },
+  {
+    id: "taskforce-handy",
+    name: "TaskForce Handy",
+    initials: "TH",
+    service: "Handyman & furniture assembly",
+    distance: "8.4 km away",
+    availability: "Weekends",
+    rating: 4.6,
+    reviews: 67,
+    description:
+      "Weekend handyman service. Handles assembly, mounting, and small repairs.",
+    reason: "Good for weekend jobs combining assembly and mounting.",
+    experience: "4 yrs",
+    skills: ["Assembly", "Wall mounting", "Small repairs"],
+  },
+];
+
 export const intents: Intent[] = [
   {
     match: ["sink", "leak", "plumb", "pipe", "tap", "drain", "toilet", "water"],
@@ -265,6 +433,7 @@ export const intents: Intent[] = [
       "It sounds like you need a plumber to inspect and repair a leaking sink.",
     taskTitle: "Leaking sink",
     providers: plumbing,
+    moreProviders: plumbingMore,
   },
   {
     match: ["ac", "air con", "cooling", "cool", "fridge", "heat", "hvac", "air conditioning"],
@@ -274,6 +443,7 @@ export const intents: Intent[] = [
       "It sounds like you need a technician to inspect a cooling unit that isn't performing.",
     taskTitle: "Cooling not working",
     providers: cooling,
+    moreProviders: coolingMore,
   },
   {
     match: ["light", "electric", "socket", "power", "wiring", "switch", "bulb", "electrical", "flicker"],
@@ -283,6 +453,7 @@ export const intents: Intent[] = [
       "It sounds like you need a certified electrician to trace a fault and repair it.",
     taskTitle: "Electrical fault",
     providers: electrical,
+    moreProviders: electricalMore,
   },
   {
     match: ["clean", "tidy", "laundry", "dust", "apartment", "mop", "scrub"],
@@ -292,6 +463,7 @@ export const intents: Intent[] = [
       "It sounds like you need a cleaning team for a scheduled visit at your place.",
     taskTitle: "Home cleaning",
     providers: cleaning,
+    moreProviders: cleaningMore,
   },
   {
     match: ["assemble", "furniture", "flat pack", "ikea", "shelf", "shelving", "put together", "build furniture"],
@@ -301,6 +473,7 @@ export const intents: Intent[] = [
       "It sounds like you need someone to assemble furniture at your place.",
     taskTitle: "Furniture assembly",
     providers: assembly,
+    moreProviders: assemblyMore,
   },
 ];
 
@@ -312,6 +485,7 @@ const fallback: Intent = {
     "I'll treat this as a general home task and look for people nearby who handle work like this.",
   taskTitle: "New request",
   providers: plumbing,
+  moreProviders: plumbingMore,
 };
 
 export function resolveIntent(input: string): Intent {

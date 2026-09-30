@@ -45,10 +45,14 @@ export function RequestWorkflow({
   const intent = resolveIntent(prompt);
   const [stage, setStage] = useState(0);
   const [decision, setDecision] = useState<Decision>("pending");
+  const [showMore, setShowMore] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<HomeProvider | null>(null);
 
   useEffect(() => {
     setStage(0);
     setDecision("pending");
+    setShowMore(false);
+    setSelectedProvider(null);
   }, [prompt]);
 
   useEffect(() => {
@@ -64,6 +68,9 @@ export function RequestWorkflow({
   const show = (n: number) => stage >= n;
   const working = stage < 7 || decision === "pending";
   const recommended = intent.providers[0]!;
+
+  const allProviders = [...intent.providers, ...intent.moreProviders];
+  const activeProvider = selectedProvider ?? recommended;
 
   // Map internal stage to the stage-trail indicator
   const trailIndex =
@@ -143,30 +150,75 @@ export function RequestWorkflow({
                 Looking for {intent.tradeLabel}s who serve your area…
               </>
             ) : (
-              <>Found {intent.providers.length} {intent.tradeLabel}s nearby.</>
+              <>I searched for {intent.tradeLabel}s in your area and found several options.</>
             )}
           </span>
         </WorkflowLine>
 
         {/* Provider cards appear */}
         {show(4) ? (
-          <div className="grid gap-3 md:grid-cols-3">
-            {intent.providers.map((p, i) => (
-              <div
-                key={p.id}
-                className="rise-in"
-                style={{ animationDelay: `${i * 140}ms` }}
-              >
-                <HomeProviderCard
-                  provider={p}
-                  compact
-                  scanning={stage === 5}
-                  recommended={stage >= 6 && i === 0}
-                  dimmed={stage >= 6 && i !== 0}
-                  showWhy={stage >= 6 && i === 0}
-                />
+          <div className="space-y-3">
+            {/* "Showing X of N" label */}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Showing {intent.providers.length} of {allProviders.length} providers that match your request
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {intent.providers.map((p, i) => (
+                <div
+                  key={p.id}
+                  className="rise-in"
+                  style={{ animationDelay: `${i * 140}ms` }}
+                >
+                  <HomeProviderCard
+                    provider={p}
+                    compact
+                    scanning={stage === 5}
+                    recommended={stage >= 6 && p.id === activeProvider.id}
+                    dimmed={stage >= 6 && p.id !== activeProvider.id}
+                    showWhy={stage >= 6 && p.id === activeProvider.id}
+                    onSelect={stage >= 7 ? () => {
+                      setSelectedProvider(p);
+                      setDecision("pending");
+                    } : undefined}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Additional providers */}
+            {showMore ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 pt-2">
+                  <span className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">More providers</span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {intent.moreProviders.map((p, i) => (
+                    <div
+                      key={p.id}
+                      className="rise-in"
+                      style={{ animationDelay: `${i * 140}ms` }}
+                    >
+                      <HomeProviderCard
+                        provider={p}
+                        compact
+                        recommended={p.id === activeProvider.id && stage >= 6}
+                        dimmed={stage >= 6 && p.id !== activeProvider.id}
+                        showWhy={p.id === activeProvider.id && stage >= 7}
+                        onSelect={stage >= 7 ? () => {
+                          setSelectedProvider(p);
+                          setDecision("pending");
+                        } : undefined}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            ) : null}
           </div>
         ) : null}
 
@@ -190,6 +242,7 @@ export function RequestWorkflow({
           <span className="text-foreground">
             I found a provider who looks like a good fit —{" "}
             <span className="font-medium">{recommended.name}</span>.
+            {" "}These are the most relevant matches from the {allProviders.length} I found nearby.
           </span>
         </WorkflowLine>
 
@@ -204,7 +257,7 @@ export function RequestWorkflow({
                   </span>
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      Ready to contact {recommended.name}?
+                      Ready to contact {activeProvider.name}?
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                       I'll reach out on your behalf and set up the next step. Nothing happens until you say so.
@@ -220,15 +273,25 @@ export function RequestWorkflow({
                   >
                     Contact provider
                   </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setDecision("declined");
-                      onDecision("declined");
-                    }}
-                  >
-                    Choose another
-                  </Button>
+                  {!showMore ? (
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowMore(true)}
+                    >
+                      See more providers
+                    </Button>
+                  ) : null}
+                  {showMore || selectedProvider ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedProvider(null);
+                        setDecision("pending");
+                      }}
+                    >
+                      Reset to recommendation
+                    </Button>
+                  ) : null}
                 </div>
               </>
             ) : (
@@ -239,7 +302,7 @@ export function RequestWorkflow({
                 <div>
                   <p className="rise-in text-sm font-medium text-foreground">
                     {decision === "approved"
-                      ? `Got it. I'll contact ${recommended.name} and get back to you.`
+                      ? `Got it. I'll contact ${activeProvider.name} and get back to you.`
                       : "No problem. I'll keep this request ready for whenever you decide."}
                   </p>
                   <p className="rise-in mt-1 text-xs text-muted-foreground">
