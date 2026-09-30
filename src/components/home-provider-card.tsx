@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { HomeProvider } from "@/lib/home-data";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +9,7 @@ export function HomeProviderCard({
   recommended = false,
   dimmed = false,
   showReason = false,
+  showWhy = false,
   onView,
 }: {
   provider: HomeProvider;
@@ -16,8 +18,11 @@ export function HomeProviderCard({
   recommended?: boolean;
   dimmed?: boolean;
   showReason?: boolean;
+  showWhy?: boolean;
   onView?: (provider: HomeProvider) => void;
 }) {
+  const [whyOpen, setWhyOpen] = useState(false);
+
   return (
     <article
       className={cn(
@@ -63,12 +68,62 @@ export function HomeProviderCard({
         <span className="tabular-nums">★ {provider.rating.toFixed(1)}</span>
         <span>{provider.distance}</span>
         <span>{provider.availability}</span>
+        {!compact && provider.experience ? (
+          <span>{provider.experience} exp.</span>
+        ) : null}
       </div>
 
       {showReason ? (
         <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
           {provider.reason}
         </p>
+      ) : null}
+
+      {showWhy ? (
+        <div className="mt-3 border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => setWhyOpen((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-medium text-foreground transition-colors hover:text-foreground/80"
+          >
+            <span
+              aria-hidden="true"
+              className={cn(
+                "transition-transform duration-200",
+                whyOpen ? "rotate-90" : "",
+              )}
+            >
+              ›
+            </span>
+            Why this provider?
+          </button>
+          <div
+            className={cn(
+              "grid transition-[grid-template-rows,opacity,margin-top] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              whyOpen
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0",
+            )}
+          >
+            <div className="overflow-hidden">
+              <p className="pt-2.5 text-xs leading-relaxed text-muted-foreground">
+                {provider.reason}
+              </p>
+              {provider.skills.length > 0 ? (
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {provider.skills.map((s) => (
+                    <span
+                      key={s}
+                      className="rounded-md border border-border bg-surface px-2 py-0.5 text-[11px] text-muted-foreground"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {onView ? (

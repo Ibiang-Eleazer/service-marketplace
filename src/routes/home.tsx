@@ -77,7 +77,9 @@ function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const [preview, setPreview] = useState<HomeProvider | null>(null);
+  const [focused, setFocused] = useState(false);
   const workflowRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   function submit(text: string) {
     const value = text.trim();
@@ -162,93 +164,108 @@ function Home() {
       />
 
       <main className="mx-auto w-full max-w-6xl px-5 pb-24 md:px-8">
-        {/* Hero / AI request area */}
-        <section className="pt-16 md:pt-24">
-          <div className="max-w-2xl">
+        {/* Hero / Assistant command center */}
+        <section className="pt-12 md:pt-20">
+          <div className="mx-auto max-w-3xl text-center">
             <AssistantStatus
               working={working}
               label={working ? "Assistant is working…" : "Assistant ready"}
-              className="rise-in"
+              className="rise-in mx-auto"
             />
             <h1
-              className="rise-in mt-5 text-[2.1rem] font-semibold leading-[1.1] text-foreground md:text-[2.8rem]"
+              className="rise-in mt-6 text-[2.2rem] font-semibold leading-[1.08] text-foreground md:text-[3rem]"
               style={{ animationDelay: "60ms" }}
             >
-              {firstName ? `${firstName}, what can I help you get done?` : "What can I help you get done?"}
+              {firstName
+                ? `${firstName}, what can I get done?`
+                : "What can I get done?"}
             </h1>
             <p
-              className="rise-in mt-3 text-[0.98rem] text-muted-foreground"
+              className="rise-in mt-3 text-[1.02rem] text-muted-foreground"
               style={{ animationDelay: "120ms" }}
             >
-              Tell me what you need in your own words. I'll figure out the next steps.
+              Describe it the way you'd tell a friend. I'll figure out what kind of help you need, find the right people, and ask before contacting anyone.
             </p>
           </div>
 
-          <form
-            className="rise-in mt-8 rounded-xl border border-border bg-card p-3 shadow-panel transition-[box-shadow,border-color] duration-300 focus-within:border-border-strong focus-within:shadow-raised"
-            style={{ animationDelay: "180ms" }}
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit(draft);
-            }}
-          >
-            <label htmlFor="ai-input" className="sr-only">
-              Tell me what you need
-            </label>
-            <div className="flex items-start gap-3 px-2 pt-2">
-              <AiMark working={working} size={18} />
-              <textarea
-                id="ai-input"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    submit(draft);
-                  }
-                }}
-                rows={2}
-                placeholder="Tell me what you need..."
-                className="min-h-16 w-full resize-none bg-transparent text-[1.02rem] text-foreground placeholder:text-muted-foreground focus:outline-none"
-              />
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-3 px-2 pb-1">
-              <p className="hidden text-xs text-muted-foreground sm:block">
-                Press Enter to send · I'll always ask before contacting anyone
-              </p>
-              <div className="ml-auto flex items-center gap-2">
-                <button
-                  type="button"
-                  aria-label="Use voice"
-                  className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-foreground"
-                >
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <rect x="6" y="2" width="4" height="7" rx="2" stroke="currentColor" strokeWidth="1.2" />
-                    <path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2" stroke="currentColor" strokeWidth="1.2" />
-                  </svg>
-                </button>
-                <Button type="submit" disabled={!draft.trim()} aria-label="Send request">
-                  Send <span aria-hidden="true">→</span>
-                </Button>
+          {/* The input */}
+          <div className="mx-auto mt-8 max-w-2xl">
+            <form
+              className={cn(
+                "rise-in overflow-hidden rounded-xl border bg-card shadow-panel transition-[box-shadow,border-color] duration-300",
+                focused
+                  ? "border-border-strong shadow-raised"
+                  : "border-border",
+              )}
+              style={{ animationDelay: "180ms" }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit(draft);
+              }}
+            >
+              <label htmlFor="ai-input" className="sr-only">
+                Tell me what you need
+              </label>
+              <div className="flex items-start gap-3 px-4 pt-4">
+                <AiMark working={working} size={18} />
+                <textarea
+                  id="ai-input"
+                  ref={inputRef}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => setFocused(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      submit(draft);
+                    }
+                  }}
+                  rows={2}
+                  placeholder="My kitchen sink is leaking..."
+                  className="min-h-16 w-full resize-none bg-transparent text-[1.05rem] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                />
               </div>
-            </div>
-          </form>
+              <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-2">
+                <p className="hidden text-xs text-muted-foreground sm:block">
+                  Press Enter to send · I'll always ask before contacting anyone
+                </p>
+                <div className="ml-auto flex items-center gap-2">
+                  <button
+                    type="button"
+                    aria-label="Use voice"
+                    className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-foreground"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <rect x="6" y="2" width="4" height="7" rx="2" stroke="currentColor" strokeWidth="1.2" />
+                      <path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2" stroke="currentColor" strokeWidth="1.2" />
+                    </svg>
+                  </button>
+                  <Button type="submit" disabled={!draft.trim()} aria-label="Send request">
+                    Send <span aria-hidden="true">→</span>
+                  </Button>
+                </div>
+              </div>
+            </form>
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            {starterPrompts.map((s, i) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => submit(s)}
-                className="rise-in rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-subtle transition-[transform,color,border-color] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground"
-                style={{ animationDelay: `${220 + i * 50}ms` }}
-              >
-                {s}
-              </button>
-            ))}
+            {/* Example prompts */}
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {starterPrompts.map((s, i) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => submit(s)}
+                  className="rise-in rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground shadow-subtle transition-[transform,color,border-color,box-shadow] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground hover:shadow-panel"
+                  style={{ animationDelay: `${240 + i * 50}ms` }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div ref={workflowRef}>
+          {/* Workflow output */}
+          <div ref={workflowRef} className="mx-auto mt-2 max-w-2xl">
             {prompt ? (
               <RequestWorkflow
                 key={prompt + (activeId ?? "")}
@@ -344,7 +361,7 @@ function Home() {
                 label="Request a service"
                 hint="Start from the assistant"
                 onClick={() =>
-                  document.getElementById("ai-input")?.focus()
+                  inputRef.current?.focus()
                 }
               />
               <QuickLink to="/requests" label="View requests" hint="Everything in progress" />
