@@ -10,6 +10,7 @@ export function HomeProviderCard({
   dimmed = false,
   showReason = false,
   showWhy = false,
+  matchCategoryLabel,
   onView,
   onSelect,
 }: {
@@ -20,6 +21,7 @@ export function HomeProviderCard({
   dimmed?: boolean;
   showReason?: boolean;
   showWhy?: boolean;
+  matchCategoryLabel?: string;
   onView?: (provider: HomeProvider) => void;
   onSelect?: () => void;
 }) {

@@ -2,12 +2,19 @@ import { useEffect, useState } from "react";
 import { AiMark, AiWave } from "@/components/ai-mark";
 import { Button } from "@/components/ui-kit";
 import { HomeProviderCard } from "@/components/home-provider-card";
-import { resolveIntent, type HomeProvider } from "@/lib/home-data";
+import {
+  resolveIntent,
+  getClarification,
+  matchCategoryLabel,
+  getMatchCategory,
+  type HomeProvider,
+  type ClarificationQuestion,
+} from "@/lib/home-data";
 import { cn } from "@/lib/utils";
 
 /**
- * Simulated assistant workflow:
- * understand → find → compare → recommend → ask permission.
+ * Simulated assistant workflow (keyboard mode):
+ * understand → [clarify] → search → compare → recommend → ask permission.
  * It never contacts anyone; it stops and waits for explicit permission.
  */
 
@@ -15,66 +22,127 @@ export type Decision = "pending" | "approved" | "declined";
 
 /**
  * Stages:
- * 0 echo          — show the user's request back
- * 1 understanding — "Understanding your request..."
- * 2 understood    — "You need help with a leaking kitchen sink."
- * 3 finding       — "Finding suitable providers nearby..."
- * 4 found         — "I found 3 providers who can help."
- * 5 comparing     — "Comparing availability, experience and relevant skills..."
- * 6 compared      — "I've compared your options."
- * 7 recommending  — Show the recommended provider + ask
+ *  0 echo          — show the user's request back
+ *  1 understanding — "Understanding your request..."
+ *  2 understood    — show interpretation summary
+ *  3 clarify       — ask clarification question (if needed)
+ *  4 finding       — "Finding suitable providers nearby..."
+ *  5 found         — provider cards appear
+ *  6 comparing     — "Comparing..."
+ *  7 compared      — recommendation
+ *  8 permission    — ask to contact
  */
-const STAGE_LABELS = [
-  "Understand",
-  "Find",
-  "Compare",
-  "Recommend",
-] as const;
+const STAGE_LABELS = ["Understand", "Find", "Compare", "Recommend"] as const;
 
-const STAGE_TIMINGS = [600, 1400, 900, 1300, 800, 1200, 600];
+// Timings without clarification: stages 1-7
+const STAGE_TIMINGS_NO_CLARIFY = [800, 1200, 900, 1300, 800, 1200, 600];
+// Timings with clarification: stages 1-2, then pause for answer, then 4-8
+const STAGE_TIMINGS_CLARIFY = [800, 1000];
 
 export function RequestWorkflow({
   prompt,
   onStage,
   onDecision,
+  onChatWithProvider,
 }: {
   prompt: string;
   onStage: (stage: number) => void;
   onDecision: (decision: Exclude<Decision, "pending">) => void;
+  onChatWithProvider?: (provider: HomeProvider) => void;
 }) {
   const intent = resolveIntent(prompt);
+  const clarification = getClarification(prompt, intent);
+
   const [stage, setStage] = useState(0);
   const [decision, setDecision] = useState<Decision>("pending");
   const [showMore, setShowMore] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<HomeProvider | null>(null);
+  const [clarificationAnswer, setClarificationAnswer] = useState<string | null>(null);
+  const [clarifyAnswered, setClarifyAnswered] = useState(false);
 
   useEffect(() => {
     setStage(0);
     setDecision("pending");
     setShowMore(false);
     setSelectedProvider(null);
+    setClarificationAnswer(null);
+    setClarifyAnswered(false);
   }, [prompt]);
 
+  // Stage progression — pauses at clarification stage if needed
   useEffect(() => {
-    if (stage >= STAGE_TIMINGS.length) return;
-    const t = setTimeout(() => setStage((s) => s + 1), STAGE_TIMINGS[stage]);
+    if (clarification && stage === 2 && !clarifyAnswered) {
+      // Wait at stage 2 (understood) then move to clarification
+      const t = setTimeout(() => setStage(3), 800);
+      return () => clearTimeout(t);
+    }
+
+    if (clarification && stage === 3 && !clarifyAnswered) {
+      // Stay at clarification stage until answered
+      return;
+    }
+
+    if (clarification && clarifyAnswered && stage === 3) {
+      // Answer received → proceed to finding
+      const t = setTimeout(() => setStage(4), 600);
+      return () => clearTimeout(t);
+    }
+
+    if (!clarification && stage === 2) {
+      // No clarification → skip to finding after showing understanding
+      const t = setTimeout(() => setStage(4), 1000);
+      return () => clearTimeout(t);
+    }
+
+    if (stage >= 8) return;
+
+    // Normal progression for stages 1, 4-8
+    const timings = clarification ? [800, 1000] : [800, 1200, 900, 1300, 800, 1200, 600];
+    const adjustedStage = clarification ? stage - 4 : stage - 1;
+
+    // For stages after clarification, adjust index
+    let timing: number | undefined;
+    if (stage === 1) timing = 800;
+    else if (stage === 2) timing = 1000;
+    else if (stage === 4) timing = 900;
+    else if (stage === 5) timing = 1300;
+    else if (stage === 6) timing = 800;
+    else if (stage === 7) timing = 1200
+    else if (stage === 8) return;
+
+    if (timing === undefined) return;
+    void adjustedStage;
+    void timings;
+
+    const t = setTimeout(() => setStage((s) => s + 1), timing);
     return () => clearTimeout(t);
-  }, [stage]);
+  }, [stage, clarification, clarifyAnswered]);
 
   useEffect(() => {
     onStage(stage);
   }, [stage, onStage]);
 
-  const show = (n: number) => stage >= n;
-  const working = stage < 7 || decision === "pending";
-  const recommended = intent.providers[0]!;
+  function handleClarifyAnswer(answer: string) {
+    setClarificationAnswer(answer);
+    setClarifyAnswered(true);
+  }
 
+  const show = (n: number) => stage >= n;
+  const working = stage < 8 || decision === "pending";
+  const recommended = intent.providers[0]!;
   const allProviders = [...intent.providers, ...intent.moreProviders];
   const activeProvider = selectedProvider ?? recommended;
 
-  // Map internal stage to the stage-trail indicator
   const trailIndex =
-    stage <= 2 ? 0 : stage <= 4 ? 1 : stage <= 6 ? 2 : 3;
+    stage <= (clarification ? 3 : 2) ? 0 : stage <= 5 ? 1 : stage <= 7 ? 2 : 3;
+
+  // Build understanding summary
+  const understandingLines: string[] = [intent.summary];
+  if (clarificationAnswer) {
+    understandingLines.push(`${clarification!.question.replace(/\?$/, "")}: ${clarificationAnswer.toLowerCase()}.`);
+  }
+  const priority = clarificationAnswer === "It's continuous" || (clarificationAnswer?.includes("Yes")) ? "Urgent" : "Normal";
+  understandingLines.push(`Priority: ${priority}.`);
 
   return (
     <div className="rise-in mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-panel">
@@ -134,17 +202,66 @@ export function RequestWorkflow({
           </span>
         </WorkflowLine>
 
-        {/* Understood — what it means */}
+        {/* Understanding summary */}
         <WorkflowLine show={show(2)}>
-          <span className="text-foreground">
-            {intent.summary}
-          </span>
+          <div className="rounded-lg border border-border bg-surface p-3">
+            <p className="mb-1.5 text-xs font-medium text-foreground">Here's what I understand:</p>
+            <ul className="space-y-1">
+              {understandingLines.map((line, i) => (
+                <li key={i} className="text-xs leading-relaxed text-muted-foreground">
+                  • {line}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-muted-foreground">
+              I'll use this to find suitable {intent.tradeLabel}s.
+            </p>
+          </div>
         </WorkflowLine>
 
+        {/* Clarification question */}
+        {clarification && show(3) && !clarifyAnswered ? (
+          <div className="rise-in rounded-lg border border-border-strong bg-surface p-4">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border-strong bg-card">
+                <AiMark working={false} size={14} />
+              </span>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">
+                  {clarification.question}
+                </p>
+                {clarification.options ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {clarification.options.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => handleClarifyAnswer(opt)}
+                        className="rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground shadow-subtle transition-[transform,color,border-color,box-shadow] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground hover:shadow-panel"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Clarification answer recorded */}
+        {clarification && clarifyAnswered && show(3) ? (
+          <WorkflowLine show>
+            <span className="text-foreground">
+              Got it — {clarificationAnswer}.
+            </span>
+          </WorkflowLine>
+        ) : null}
+
         {/* Finding providers */}
-        <WorkflowLine show={show(3)}>
+        <WorkflowLine show={show(4)}>
           <span className="flex items-center gap-2">
-            {stage === 3 ? (
+            {stage === 4 ? (
               <>
                 <ScanDot />
                 Looking for {intent.tradeLabel}s who serve your area…
@@ -155,10 +272,9 @@ export function RequestWorkflow({
           </span>
         </WorkflowLine>
 
-        {/* Provider cards appear */}
-        {show(4) ? (
+        {/* Provider cards */}
+        {show(5) ? (
           <div className="space-y-3">
-            {/* "Showing X of N" label */}
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
                 Showing {intent.providers.length} of {allProviders.length} providers that match your request
@@ -166,26 +282,30 @@ export function RequestWorkflow({
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
-              {intent.providers.map((p, i) => (
-                <div
-                  key={p.id}
-                  className="rise-in"
-                  style={{ animationDelay: `${i * 140}ms` }}
-                >
-                  <HomeProviderCard
-                    provider={p}
-                    compact
-                    scanning={stage === 5}
-                    recommended={stage >= 6 && p.id === activeProvider.id}
-                    dimmed={stage >= 6 && p.id !== activeProvider.id}
-                    showWhy={stage >= 6 && p.id === activeProvider.id}
-                    onSelect={stage >= 7 ? () => {
-                      setSelectedProvider(p);
-                      setDecision("pending");
-                    } : undefined}
-                  />
-                </div>
-              ))}
+              {intent.providers.map((p, i) => {
+                const matchCat = getMatchCategory(intent, p.id);
+                return (
+                  <div
+                    key={p.id}
+                    className="rise-in"
+                    style={{ animationDelay: `${i * 140}ms` }}
+                  >
+                    <HomeProviderCard
+                      provider={p}
+                      compact
+                      scanning={stage === 6}
+                      recommended={stage >= 7 && p.id === activeProvider.id}
+                      dimmed={stage >= 7 && p.id !== activeProvider.id}
+                      showWhy={stage >= 7 && p.id === activeProvider.id}
+                      matchCategoryLabel={matchCat ? matchCategoryLabel(matchCat) : undefined}
+                      onSelect={stage >= 8 ? () => {
+                        setSelectedProvider(p);
+                        setDecision("pending");
+                      } : undefined}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {/* Additional providers */}
@@ -197,25 +317,29 @@ export function RequestWorkflow({
                   <span className="h-px flex-1 bg-border" />
                 </div>
                 <div className="grid gap-3 md:grid-cols-3">
-                  {intent.moreProviders.map((p, i) => (
-                    <div
-                      key={p.id}
-                      className="rise-in"
-                      style={{ animationDelay: `${i * 140}ms` }}
-                    >
-                      <HomeProviderCard
-                        provider={p}
-                        compact
-                        recommended={p.id === activeProvider.id && stage >= 6}
-                        dimmed={stage >= 6 && p.id !== activeProvider.id}
-                        showWhy={p.id === activeProvider.id && stage >= 7}
-                        onSelect={stage >= 7 ? () => {
-                          setSelectedProvider(p);
-                          setDecision("pending");
-                        } : undefined}
-                      />
-                    </div>
-                  ))}
+                  {intent.moreProviders.map((p, i) => {
+                    const matchCat = getMatchCategory(intent, p.id);
+                    return (
+                      <div
+                        key={p.id}
+                        className="rise-in"
+                        style={{ animationDelay: `${i * 140}ms` }}
+                      >
+                        <HomeProviderCard
+                          provider={p}
+                          compact
+                          recommended={p.id === activeProvider.id && stage >= 7}
+                          dimmed={stage >= 7 && p.id !== activeProvider.id}
+                          showWhy={p.id === activeProvider.id && stage >= 8}
+                          matchCategoryLabel={matchCat ? matchCategoryLabel(matchCat) : undefined}
+                          onSelect={stage >= 8 ? () => {
+                            setSelectedProvider(p);
+                            setDecision("pending");
+                          } : undefined}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}
@@ -223,9 +347,9 @@ export function RequestWorkflow({
         ) : null}
 
         {/* Comparing */}
-        <WorkflowLine show={show(5)}>
+        <WorkflowLine show={show(6)}>
           <span className="flex items-center gap-2">
-            {stage === 5 ? (
+            {stage === 6 ? (
               <>
                 <AiMark working size={15} />
                 Checking experience with {intent.service.toLowerCase()} repairs, availability and distance…
@@ -238,7 +362,7 @@ export function RequestWorkflow({
         </WorkflowLine>
 
         {/* Recommendation */}
-        <WorkflowLine show={show(6)}>
+        <WorkflowLine show={show(7)}>
           <span className="text-foreground">
             I found a provider who looks like a good fit —{" "}
             <span className="font-medium">{recommended.name}</span>.
@@ -247,7 +371,7 @@ export function RequestWorkflow({
         </WorkflowLine>
 
         {/* Permission step */}
-        {show(7) ? (
+        {show(8) ? (
           <div className="rise-in overflow-hidden rounded-lg border border-border-strong bg-surface p-4">
             {decision === "pending" ? (
               <>
@@ -279,6 +403,14 @@ export function RequestWorkflow({
                       onClick={() => setShowMore(true)}
                     >
                       See more providers
+                    </Button>
+                  ) : null}
+                  {onChatWithProvider ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => onChatWithProvider(activeProvider)}
+                    >
+                      Chat with provider
                     </Button>
                   ) : null}
                   {showMore || selectedProvider ? (
@@ -322,9 +454,11 @@ export function RequestWorkflow({
         <AiMark working={working && decision === "pending"} size={12} />
         {decision !== "pending"
           ? "Ready when you are."
-          : stage >= 7
-            ? "Waiting for your decision."
-            : "Assistant is working…"}
+          : clarification && stage === 3 && !clarifyAnswered
+            ? "Waiting for your answer."
+            : stage >= 8
+              ? "Waiting for your decision."
+              : "Assistant is working…"}
       </div>
     </div>
   );

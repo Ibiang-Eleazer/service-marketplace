@@ -17,6 +17,13 @@ export type HomeProvider = {
   skills: string[];
 };
 
+export type MatchCategory =
+  | "strong-overall"
+  | "closest"
+  | "earliest"
+  | "most-experienced"
+  | "best-value";
+
 export type Intent = {
   /** keywords that route a free-text request to this intent */
   match: string[];
@@ -29,6 +36,8 @@ export type Intent = {
   providers: HomeProvider[];
   /** Additional providers shown when the user asks for more */
   moreProviders: HomeProvider[];
+  /** Map provider ID → match category for "why" explanations */
+  matchCategories?: Record<string, MatchCategory>;
 };
 
 const plumbing: HomeProvider[] = [
@@ -434,6 +443,11 @@ export const intents: Intent[] = [
     taskTitle: "Leaking sink",
     providers: plumbing,
     moreProviders: plumbingMore,
+    matchCategories: {
+      "alex-home-repairs": "strong-overall",
+      "mara-fittings": "earliest",
+      "northside-plumbing": "most-experienced",
+    },
   },
   {
     match: ["ac", "air con", "cooling", "cool", "fridge", "heat", "hvac", "air conditioning"],
@@ -444,6 +458,11 @@ export const intents: Intent[] = [
     taskTitle: "Cooling not working",
     providers: cooling,
     moreProviders: coolingMore,
+    matchCategories: {
+      "coolform-technicians": "earliest",
+      "brightair-service": "strong-overall",
+      "vento-cooling": "best-value",
+    },
   },
   {
     match: ["light", "electric", "socket", "power", "wiring", "switch", "bulb", "electrical", "flicker"],
@@ -454,6 +473,11 @@ export const intents: Intent[] = [
     taskTitle: "Electrical fault",
     providers: electrical,
     moreProviders: electricalMore,
+    matchCategories: {
+      "lumen-electrical": "strong-overall",
+      "circuit-works": "most-experienced",
+      "nia-sparks": "closest",
+    },
   },
   {
     match: ["clean", "tidy", "laundry", "dust", "apartment", "mop", "scrub"],
@@ -464,6 +488,11 @@ export const intents: Intent[] = [
     taskTitle: "Home cleaning",
     providers: cleaning,
     moreProviders: cleaningMore,
+    matchCategories: {
+      "still-house-cleaning": "strong-overall",
+      "orderly-co": "earliest",
+      "tunde-clean": "best-value",
+    },
   },
   {
     match: ["assemble", "furniture", "flat pack", "ikea", "shelf", "shelving", "put together", "build furniture"],
@@ -474,6 +503,11 @@ export const intents: Intent[] = [
     taskTitle: "Furniture assembly",
     providers: assembly,
     moreProviders: assemblyMore,
+    matchCategories: {
+      "fixit-jon": "strong-overall",
+      "buildright": "most-experienced",
+      "maria-handy": "earliest",
+    },
   },
 ];
 
@@ -491,6 +525,102 @@ const fallback: Intent = {
 export function resolveIntent(input: string): Intent {
   const text = input.toLowerCase();
   return intents.find((i) => i.match.some((k) => text.includes(k))) ?? fallback;
+}
+
+export function matchCategoryLabel(category: MatchCategory): string {
+  switch (category) {
+    case "strong-overall":
+      return "Strong overall match";
+    case "closest":
+      return "Closest to you";
+    case "earliest":
+      return "Earliest availability";
+    case "most-experienced":
+      return "Most experienced";
+    case "best-value":
+      return "Best value";
+  }
+}
+
+export function getMatchCategory(intent: Intent, providerId: string): MatchCategory | undefined {
+  return intent.matchCategories?.[providerId];
+}
+
+/** A dynamically-determined clarification question */
+export type ClarificationQuestion = {
+  id: string;
+  question: string;
+  /** Options the user can pick (if applicable) */
+  options?: string[];
+  /** Short field name stored in the conversation context */
+  field: string;
+};
+
+/** Determine if a request needs clarification, and what to ask first */
+export function getClarification(input: string, intent: Intent): ClarificationQuestion | null {
+  const text = input.toLowerCase();
+
+  // Plumbing — ask about leak nature if not mentioned
+  if (intent.service === "Plumbing") {
+    if (!text.includes("continuous") && !text.includes("when") && !text.includes("drip")) {
+      return {
+        id: "leak-nature",
+        question: "Is the water leaking continuously, or only when the sink is being used?",
+        options: ["Only when I use the sink", "It's continuous", "Not sure"],
+        field: "leakNature",
+      };
+    }
+  }
+
+  // Cooling — ask if it's partially working or completely dead
+  if (intent.service === "Appliance repair") {
+    if (!text.includes("completely") && !text.includes("partial") && !text.includes("warm air")) {
+      return {
+        id: "cooling-nature",
+        question: "Is the AC blowing warm air, or not turning on at all?",
+        options: ["Blowing warm air", "Not turning on", "Weak airflow"],
+        field: "coolingNature",
+      };
+    }
+  }
+
+  // Cleaning — ask about size/type if not specified
+  if (intent.service === "Cleaning") {
+    if (!text.includes("apartment") && !text.includes("house") && !text.includes("studio")) {
+      return {
+        id: "property-type",
+        question: "Is it an apartment or a house?",
+        options: ["Apartment", "House", "Studio"],
+        field: "propertyType",
+      };
+    }
+  }
+
+  // Electrical — ask if there's an immediate safety concern
+  if (intent.service === "Electrical") {
+    if (!text.includes("burning") && !text.includes("spark") && !text.includes("smell")) {
+      return {
+        id: "safety-check",
+        question: "Do you see any burning, sparking, or smell anything unusual?",
+        options: ["No, nothing like that", "Yes, there's a smell", "Yes, I see sparks"],
+        field: "safetyConcern",
+      };
+    }
+  }
+
+  // Assembly — ask about number of items
+  if (intent.service === "Furniture assembly") {
+    if (!text.includes("one") && !text.includes("two") && !text.includes("multiple")) {
+      return {
+        id: "item-count",
+        question: "How many items need assembling?",
+        options: ["Just one", "Two or three", "More than three"],
+        field: "itemCount",
+      };
+    }
+  }
+
+  return null;
 }
 
 export function titleFor(input: string, intent: Intent): string {
