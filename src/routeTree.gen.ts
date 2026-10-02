@@ -15,9 +15,19 @@ import { Route as CompleteRouteImport } from './routes/complete'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ProviderRouteImport } from './routes/provider'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as RoleRouteImport } from './routes/role'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ProviderIndexRouteImport } from './routes/provider.index'
+import { Route as ProviderAnalyticsRouteImport } from './routes/provider.analytics'
+import { Route as ProviderAssistantRouteImport } from './routes/provider.assistant'
+import { Route as ProviderCalendarRouteImport } from './routes/provider.calendar'
+import { Route as ProviderEarningsRouteImport } from './routes/provider.earnings'
+import { Route as ProviderJobsRouteImport } from './routes/provider.jobs'
+import { Route as ProviderMessagesRouteImport } from './routes/provider.messages'
+import { Route as ProviderProfileRouteImport } from './routes/provider.profile'
+import { Route as ProviderSettingsRouteImport } from './routes/provider.settings'
 import { Route as SetupCustomerRouteImport } from './routes/setup.customer'
 import { Route as SetupProviderRouteImport } from './routes/setup.provider'
 
@@ -51,6 +61,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProviderRoute = ProviderRouteImport.update({
+  id: '/provider',
+  path: '/provider',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RequestsRoute = RequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
@@ -65,6 +80,51 @@ const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProviderIndexRoute = ProviderIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderAnalyticsRoute = ProviderAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderAssistantRoute = ProviderAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderCalendarRoute = ProviderCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderEarningsRoute = ProviderEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderJobsRoute = ProviderJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderMessagesRoute = ProviderMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderProfileRoute = ProviderProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderSettingsRoute = ProviderSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => ProviderRoute,
 } as any)
 const SetupCustomerRoute = SetupCustomerRouteImport.update({
   id: '/setup/customer',
@@ -84,11 +144,21 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
+  '/provider': typeof ProviderRouteWithChildren
   '/requests': typeof RequestsRoute
   '/role': typeof RoleRoute
   '/signup': typeof SignupRoute
+  '/provider/analytics': typeof ProviderAnalyticsRoute
+  '/provider/assistant': typeof ProviderAssistantRoute
+  '/provider/calendar': typeof ProviderCalendarRoute
+  '/provider/earnings': typeof ProviderEarningsRoute
+  '/provider/jobs': typeof ProviderJobsRoute
+  '/provider/messages': typeof ProviderMessagesRoute
+  '/provider/profile': typeof ProviderProfileRoute
+  '/provider/settings': typeof ProviderSettingsRoute
   '/setup/customer': typeof SetupCustomerRoute
   '/setup/provider': typeof SetupProviderRoute
+  '/provider/': typeof ProviderIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,8 +170,17 @@ export interface FileRoutesByTo {
   '/requests': typeof RequestsRoute
   '/role': typeof RoleRoute
   '/signup': typeof SignupRoute
+  '/provider/analytics': typeof ProviderAnalyticsRoute
+  '/provider/assistant': typeof ProviderAssistantRoute
+  '/provider/calendar': typeof ProviderCalendarRoute
+  '/provider/earnings': typeof ProviderEarningsRoute
+  '/provider/jobs': typeof ProviderJobsRoute
+  '/provider/messages': typeof ProviderMessagesRoute
+  '/provider/profile': typeof ProviderProfileRoute
+  '/provider/settings': typeof ProviderSettingsRoute
   '/setup/customer': typeof SetupCustomerRoute
   '/setup/provider': typeof SetupProviderRoute
+  '/provider': typeof ProviderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -111,11 +190,21 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
+  '/provider': typeof ProviderRouteWithChildren
   '/requests': typeof RequestsRoute
   '/role': typeof RoleRoute
   '/signup': typeof SignupRoute
+  '/provider/analytics': typeof ProviderAnalyticsRoute
+  '/provider/assistant': typeof ProviderAssistantRoute
+  '/provider/calendar': typeof ProviderCalendarRoute
+  '/provider/earnings': typeof ProviderEarningsRoute
+  '/provider/jobs': typeof ProviderJobsRoute
+  '/provider/messages': typeof ProviderMessagesRoute
+  '/provider/profile': typeof ProviderProfileRoute
+  '/provider/settings': typeof ProviderSettingsRoute
   '/setup/customer': typeof SetupCustomerRoute
   '/setup/provider': typeof SetupProviderRoute
+  '/provider/': typeof ProviderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -126,11 +215,21 @@ export interface FileRouteTypes {
     | '/home'
     | '/messages'
     | '/profile'
+    | '/provider'
     | '/requests'
     | '/role'
     | '/signup'
+    | '/provider/analytics'
+    | '/provider/assistant'
+    | '/provider/calendar'
+    | '/provider/earnings'
+    | '/provider/jobs'
+    | '/provider/messages'
+    | '/provider/profile'
+    | '/provider/settings'
     | '/setup/customer'
     | '/setup/provider'
+    | '/provider/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -142,8 +241,17 @@ export interface FileRouteTypes {
     | '/requests'
     | '/role'
     | '/signup'
+    | '/provider/analytics'
+    | '/provider/assistant'
+    | '/provider/calendar'
+    | '/provider/earnings'
+    | '/provider/jobs'
+    | '/provider/messages'
+    | '/provider/profile'
+    | '/provider/settings'
     | '/setup/customer'
     | '/setup/provider'
+    | '/provider'
   id:
     | '__root__'
     | '/'
@@ -152,11 +260,21 @@ export interface FileRouteTypes {
     | '/home'
     | '/messages'
     | '/profile'
+    | '/provider'
     | '/requests'
     | '/role'
     | '/signup'
+    | '/provider/analytics'
+    | '/provider/assistant'
+    | '/provider/calendar'
+    | '/provider/earnings'
+    | '/provider/jobs'
+    | '/provider/messages'
+    | '/provider/profile'
+    | '/provider/settings'
     | '/setup/customer'
     | '/setup/provider'
+    | '/provider/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -166,6 +284,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   MessagesRoute: typeof MessagesRoute
   ProfileRoute: typeof ProfileRoute
+  ProviderRoute: typeof ProviderRouteWithChildren
   RequestsRoute: typeof RequestsRoute
   RoleRoute: typeof RoleRoute
   SignupRoute: typeof SignupRoute
@@ -217,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/provider': {
+      id: '/provider'
+      path: '/provider'
+      fullPath: '/provider'
+      preLoaderRoute: typeof ProviderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/requests': {
       id: '/requests'
       path: '/requests'
@@ -238,6 +364,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/provider/': {
+      id: '/provider/'
+      path: '/'
+      fullPath: '/provider/'
+      preLoaderRoute: typeof ProviderIndexRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/provider/analytics': {
+      id: '/provider/analytics'
+      path: '/analytics'
+      fullPath: '/provider/analytics'
+      preLoaderRoute: typeof ProviderAnalyticsRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/provider/assistant': {
+      id: '/provider/assistant'
+      path: '/assistant'
+      fullPath: '/provider/assistant'
+      preLoaderRoute: typeof ProviderAssistantRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/provider/calendar': {
+      id: '/provider/calendar'
+      path: '/calendar'
+      fullPath: '/provider/calendar'
+      preLoaderRoute: typeof ProviderCalendarRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/provider/earnings': {
+      id: '/provider/earnings'
+      path: '/earnings'
+      fullPath: '/provider/earnings'
+      preLoaderRoute: typeof ProviderEarningsRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/provider/jobs': {
+      id: '/provider/jobs'
+      path: '/jobs'
+      fullPath: '/provider/jobs'
+      preLoaderRoute: typeof ProviderJobsRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/provider/messages': {
+      id: '/provider/messages'
+      path: '/messages'
+      fullPath: '/provider/messages'
+      preLoaderRoute: typeof ProviderMessagesRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/provider/profile': {
+      id: '/provider/profile'
+      path: '/profile'
+      fullPath: '/provider/profile'
+      preLoaderRoute: typeof ProviderProfileRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/provider/settings': {
+      id: '/provider/settings'
+      path: '/settings'
+      fullPath: '/provider/settings'
+      preLoaderRoute: typeof ProviderSettingsRouteImport
+      parentRoute: typeof ProviderRoute
+    }
     '/setup/customer': {
       id: '/setup/customer'
       path: '/setup/customer'
@@ -255,6 +444,34 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ProviderRouteChildren {
+  ProviderAnalyticsRoute: typeof ProviderAnalyticsRoute
+  ProviderAssistantRoute: typeof ProviderAssistantRoute
+  ProviderCalendarRoute: typeof ProviderCalendarRoute
+  ProviderEarningsRoute: typeof ProviderEarningsRoute
+  ProviderJobsRoute: typeof ProviderJobsRoute
+  ProviderMessagesRoute: typeof ProviderMessagesRoute
+  ProviderProfileRoute: typeof ProviderProfileRoute
+  ProviderSettingsRoute: typeof ProviderSettingsRoute
+  ProviderIndexRoute: typeof ProviderIndexRoute
+}
+
+const ProviderRouteChildren: ProviderRouteChildren = {
+  ProviderAnalyticsRoute: ProviderAnalyticsRoute,
+  ProviderAssistantRoute: ProviderAssistantRoute,
+  ProviderCalendarRoute: ProviderCalendarRoute,
+  ProviderEarningsRoute: ProviderEarningsRoute,
+  ProviderJobsRoute: ProviderJobsRoute,
+  ProviderMessagesRoute: ProviderMessagesRoute,
+  ProviderProfileRoute: ProviderProfileRoute,
+  ProviderSettingsRoute: ProviderSettingsRoute,
+  ProviderIndexRoute: ProviderIndexRoute,
+}
+
+const ProviderRouteWithChildren = ProviderRoute._addFileChildren(
+  ProviderRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistantRoute: AssistantRoute,
@@ -262,6 +479,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   MessagesRoute: MessagesRoute,
   ProfileRoute: ProfileRoute,
+  ProviderRoute: ProviderRouteWithChildren,
   RequestsRoute: RequestsRoute,
   RoleRoute: RoleRoute,
   SignupRoute: SignupRoute,
