@@ -186,6 +186,29 @@
   &[data-visible="true"] { transform: scaleX(1); }
 }
 
+/* Hands-off mode */
+@utility handsoff-surface {
+  animation: handsoff-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  &[data-state="closed"] {
+    animation: handsoff-out 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+  }
+}
+@keyframes handsoff-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes handsoff-out {
+  to { opacity: 0; }
+}
+
+@utility handsoff-orb {
+  animation: handsoff-orb-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+@keyframes handsoff-orb-in {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: none; }
+}
+
 /* Page transitions (View Transitions API) */
 ::view-transition-old(root) {
   animation: vt-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;

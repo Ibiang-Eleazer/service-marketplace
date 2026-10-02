@@ -3,6 +3,11 @@ import { useCallback, useRef, useState } from "react";
 import { AppNav, AssistantStatus } from "@/components/app-nav";
 import { AiMark } from "@/components/ai-mark";
 import { HomeProviderCard } from "@/components/home-provider-card";
+import { HandsOffMode } from "@/components/hands-off/hands-off-mode";
+import {
+  assistantStateFromWorkflow,
+  type WorkflowDecision,
+} from "@/lib/assistant-state";
 import { RequestWorkflow } from "@/components/request-workflow";
 import { Button } from "@/components/ui-kit";
 import {
@@ -80,6 +85,15 @@ function Home() {
   const [focused, setFocused] = useState(false);
   const workflowRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [handsOff, setHandsOff] = useState(false);
+  const [workflowStage, setWorkflowStage] = useState<number | null>(null);
+  const [workflowDecision, setWorkflowDecision] = useState<WorkflowDecision>("pending");
+  const handsOffTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const exitHandsOff = useCallback(() => {
+    setHandsOff(false);
+    requestAnimationFrame(() => handsOffTriggerRef.current?.focus());
+  }, []);
 
   function submit(text: string) {
     const value = text.trim();
@@ -98,6 +112,8 @@ function Home() {
     ]);
     setActiveId(id);
     setPrompt(value);
+    setWorkflowStage(0);
+    setWorkflowDecision("pending");
     setDraft("");
     setWorking(true);
     requestAnimationFrame(() =>
@@ -108,6 +124,7 @@ function Home() {
   const handleStage = useCallback(
     (stage: number) => {
       setWorking(stage < 7);
+      setWorkflowStage(stage);
       setRequests((prev) =>
         prev.map((r) =>
           r.id !== activeId
@@ -134,6 +151,7 @@ function Home() {
   const handleDecision = useCallback(
     (decision: "approved" | "declined") => {
       setWorking(false);
+      setWorkflowDecision(decision);
       setRequests((prev) =>
         prev.map((r) =>
           r.id !== activeId
@@ -158,6 +176,7 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      <div inert={handsOff} aria-hidden={handsOff || undefined}>
       <AppNav
         working={working}
         statusLabel={working ? "Assistant is working…" : "Assistant ready"}
@@ -231,6 +250,16 @@ function Home() {
                   Press Enter to send · I'll always ask before contacting anyone
                 </p>
                 <div className="ml-auto flex items-center gap-2">
+                  <button
+                    ref={handsOffTriggerRef}
+                    type="button"
+                    onClick={() => setHandsOff(true)}
+                    aria-label="Switch to hands-off mode"
+                    className="inline-flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm text-muted-foreground transition-[color,border-color,background-color] duration-200 hover:border-border-strong hover:bg-accent hover:text-foreground"
+                  >
+                    <AiMark working={false} size={14} />
+                    Hands-off
+                  </button>
                   <button
                     type="button"
                     aria-label="Use voice"
@@ -394,6 +423,14 @@ function Home() {
       {preview ? (
         <ProviderPreview provider={preview} onClose={() => setPreview(null)} />
       ) : null}
+      </div>
+
+      <HandsOffMode
+        open={handsOff}
+        onExit={exitHandsOff}
+        state={assistantStateFromWorkflow(workflowStage, workflowDecision)}
+        requestLabel={prompt}
+      />
     </div>
   );
 }
