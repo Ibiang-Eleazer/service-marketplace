@@ -372,3 +372,70 @@ export const payouts = [
   { id: "PO-892", job: "Kitchen installation — balance", date: "Expected 20 Oct", amount: 725000, status: "Pending" },
   { id: "PO-893", job: "Electrical inspection", date: "Expected 14 Oct", amount: 40000, status: "Pending" },
 ];
+
+export type DiscoverProvider = {
+  id: string;
+  name: string;
+  initials: string;
+  profession: string;
+  specialty: string;
+  rating: number;
+  reviewCount: number;
+  area: string;
+  image: string;
+  imageAlt: string;
+  verified?: boolean;
+};
+
+export const discoverProviders: DiscoverProvider[] = [
+  {
+    id: "d1",
+    name: "Zainab Bello",
+    initials: "ZB",
+    profession: "Fashion designer",
+    specialty: "Bespoke evening wear",
+    rating: 4.8,
+    reviewCount: 156,
+    area: "Surulere, Lagos",
+    image: "/images/work-dress.png",
+    imageAlt: "Emerald structured evening dress on a dress form",
+    verified: true,
+  },
+  {
+    id: "d2",
+    name: "Emeka Udo",
+    initials: "EU",
+    profession: "Mechanical engineer",
+    specialty: "Solar pump prototyping",
+    rating: 4.6,
+    reviewCount: 42,
+    area: "Ogun",
+    image: "/images/work-prototype.png",
+    imageAlt: "Solar water pump prototype on a workbench",
+  },
+  {
+    id: "d3",
+    name: "Musa Garba",
+    initials: "MG",
+    profession: "Classic car mechanic",
+    specialty: "Engine rebuilds & restoration",
+    rating: 4.9,
+    reviewCount: 98,
+    area: "Kano",
+    image: "/images/work-restoration.png",
+    imageAlt: "Restored cream classic sedan in a garage",
+    verified: true,
+  },
+  {
+    id: "d4",
+    name: "Grace Adeoye",
+    initials: "GA",
+    profession: "Interior designer",
+    specialty: "Kitchen & living spaces",
+    rating: 4.7,
+    reviewCount: 73,
+    area: "Yaba, Lagos",
+    image: "/images/work-kitchen.png",
+    imageAlt: "Modern oak kitchen with charcoal base units",
+  },
+];
