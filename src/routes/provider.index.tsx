@@ -6,6 +6,8 @@ import { TodaySchedule } from "@/components/provider/home/today-schedule";
 import { QuickPerformance } from "@/components/provider/home/quick-performance";
 import { ProfessionalFeed } from "@/components/provider/home/professional-feed";
 import { Opportunities } from "@/components/provider/home/opportunities";
+import { AiInsight } from "@/components/provider/home/ai-insight";
+import { DiscoverProfessionals } from "@/components/provider/home/discover-professionals";
 
 export const Route = createFileRoute("/provider/")({
   component: ProviderHome,
@@ -21,11 +23,13 @@ function ProviderHome() {
         <div className="contents lg:flex lg:flex-col lg:gap-6">
           <ActionCenter className="order-1" />
           <ProfessionalFeed className="order-5 mt-4 lg:mt-0" />
+          <DiscoverProfessionals className="order-6" />
         </div>
         <div className="contents lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-4">
           <TodaySchedule className="order-2" />
           <QuickPerformance className="order-3" />
           <Opportunities className="order-4" />
+          <AiInsight className="order-7" />
         </div>
       </div>
     </PageContainer>
