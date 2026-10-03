@@ -37,9 +37,9 @@ function Complete() {
       footer={
         <Button
           size="lg"
-          onClick={() => navigate({ to: isProvider ? "/profile" : "/home" })}
+          onClick={() => navigate({ to: isProvider ? "/provider" : "/home" })}
         >
-          {isProvider ? "View my profile" : "Go to my assistant"}
+          {isProvider ? "Go to my workspace" : "Go to my assistant"}
         </Button>
       }
     />
