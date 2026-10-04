@@ -13,7 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as CompleteRouteImport } from './routes/complete'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProviderRouteImport } from './routes/provider'
 import { Route as RequestsRouteImport } from './routes/requests'
@@ -51,9 +53,19 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -142,7 +154,9 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AssistantRoute
   '/complete': typeof CompleteRoute
   '/home': typeof HomeRoute
+  '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/provider': typeof ProviderRouteWithChildren
   '/requests': typeof RequestsRoute
@@ -165,7 +179,9 @@ export interface FileRoutesByTo {
   '/assistant': typeof AssistantRoute
   '/complete': typeof CompleteRoute
   '/home': typeof HomeRoute
+  '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/requests': typeof RequestsRoute
   '/role': typeof RoleRoute
@@ -188,7 +204,9 @@ export interface FileRoutesById {
   '/assistant': typeof AssistantRoute
   '/complete': typeof CompleteRoute
   '/home': typeof HomeRoute
+  '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/provider': typeof ProviderRouteWithChildren
   '/requests': typeof RequestsRoute
@@ -213,7 +231,9 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/complete'
     | '/home'
+    | '/library'
     | '/messages'
+    | '/notifications'
     | '/profile'
     | '/provider'
     | '/requests'
@@ -236,7 +256,9 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/complete'
     | '/home'
+    | '/library'
     | '/messages'
+    | '/notifications'
     | '/profile'
     | '/requests'
     | '/role'
@@ -258,7 +280,9 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/complete'
     | '/home'
+    | '/library'
     | '/messages'
+    | '/notifications'
     | '/profile'
     | '/provider'
     | '/requests'
@@ -282,7 +306,9 @@ export interface RootRouteChildren {
   AssistantRoute: typeof AssistantRoute
   CompleteRoute: typeof CompleteRoute
   HomeRoute: typeof HomeRoute
+  LibraryRoute: typeof LibraryRoute
   MessagesRoute: typeof MessagesRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   ProviderRoute: typeof ProviderRouteWithChildren
   RequestsRoute: typeof RequestsRoute
@@ -322,11 +348,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/messages': {
       id: '/messages'
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -477,7 +517,9 @@ const rootRouteChildren: RootRouteChildren = {
   AssistantRoute: AssistantRoute,
   CompleteRoute: CompleteRoute,
   HomeRoute: HomeRoute,
+  LibraryRoute: LibraryRoute,
   MessagesRoute: MessagesRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   ProviderRoute: ProviderRouteWithChildren,
   RequestsRoute: RequestsRoute,

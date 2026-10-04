@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { Brand } from "@/components/brand";
 import { AiMark } from "@/components/ai-mark";
 import { useOnboarding } from "@/lib/onboarding-store";
+import { seedNotifications } from "@/lib/feed-data";
 import { cn } from "@/lib/utils";
 
 const links = [
   { to: "/home", label: "Home" },
   { to: "/requests", label: "Requests" },
   { to: "/messages", label: "Messages" },
+  { to: "/library", label: "Library" },
 ] as const;
 
 export function AssistantStatus({
@@ -51,14 +53,13 @@ export function AppNav({
       .join("") || "A";
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const unreadCount = seedNotifications.filter((n) => n.unread).length;
 
   useEffect(() => {
     function onDown(e: MouseEvent) {
       if (!wrapRef.current?.contains(e.target as Node)) {
         setMenuOpen(false);
-        setNotifOpen(false);
       }
     }
     document.addEventListener("mousedown", onDown);
@@ -67,10 +68,10 @@ export function AppNav({
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-6 px-5 md:px-8">
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-5 md:px-8">
         <Brand />
 
-        <nav className="hidden items-center gap-1 sm:flex" aria-label="Main">
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">
           {links.map((l) => (
             <Link
               key={l.to}
@@ -83,21 +84,16 @@ export function AppNav({
           ))}
         </nav>
 
-        <div ref={wrapRef} className="relative ml-auto flex items-center gap-2">
+        <div ref={wrapRef} className="relative ml-auto flex items-center gap-1.5">
           <AssistantStatus
             working={working}
             label={statusLabel}
-            className="hidden md:inline-flex"
+            className="hidden xl:inline-flex"
           />
 
-          <button
-            type="button"
+          <Link
+            to="/notifications"
             aria-label="Notifications"
-            aria-expanded={notifOpen}
-            onClick={() => {
-              setNotifOpen((v) => !v);
-              setMenuOpen(false);
-            }}
             className="relative grid h-8 w-8 place-items-center rounded-md text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-foreground"
           >
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -108,39 +104,18 @@ export function AppNav({
               />
               <path d="M6.5 13.2a1.8 1.8 0 0 0 3 0" stroke="currentColor" strokeWidth="1.2" />
             </svg>
-            <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-foreground" />
-          </button>
+            {unreadCount > 0 ? (
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-foreground" />
+            ) : null}
+          </Link>
 
-          <button
-            type="button"
-            aria-label="Account"
-            aria-expanded={menuOpen}
-            onClick={() => {
-              setMenuOpen((v) => !v);
-              setNotifOpen(false);
-            }}
+          <Link
+            to="/profile"
+            aria-label="Your profile"
             className="grid h-8 w-8 place-items-center rounded-full border border-border-strong bg-card text-[11px] font-semibold text-foreground shadow-subtle transition-transform duration-200 hover:-translate-y-px"
           >
             {initials}
-          </button>
-
-          {notifOpen ? (
-            <div className="rise-in absolute right-0 top-11 w-72 rounded-lg border border-border bg-popover p-1.5 shadow-raised">
-              <p className="px-2.5 py-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-                Notifications
-              </p>
-              {[
-                ["Northside Plumbing replied", "12 min ago"],
-                ["Your cooling request needs a decision", "1 h ago"],
-                ["Electrical repair marked complete", "Last week"],
-              ].map(([t, w]) => (
-                <div key={t} className="rounded-md px-2.5 py-2 hover:bg-accent">
-                  <p className="text-sm text-foreground">{t}</p>
-                  <p className="text-xs text-muted-foreground">{w}</p>
-                </div>
-              ))}
-            </div>
-          ) : null}
+          </Link>
 
           {menuOpen ? (
             <div className="rise-in absolute right-0 top-11 w-56 rounded-lg border border-border bg-popover p-1.5 shadow-raised">
@@ -151,15 +126,26 @@ export function AppNav({
                 </p>
               </div>
               <div className="my-1 h-px bg-border" />
-              {["Account settings", "Saved providers", "Help"].map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className="w-full rounded-md px-2.5 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  {item}
-                </button>
-              ))}
+              <Link
+                to="/profile"
+                className="block rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onClick={() => setMenuOpen(false)}
+              >
+                Your profile
+              </Link>
+              <Link
+                to="/library"
+                className="block rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onClick={() => setMenuOpen(false)}
+              >
+                Library
+              </Link>
+              <button
+                type="button"
+                className="w-full rounded-md px-2.5 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                Help
+              </button>
               <div className="my-1 h-px bg-border" />
               <Link
                 to="/"
@@ -172,15 +158,16 @@ export function AppNav({
         </div>
       </div>
 
+      {/* Mobile + tablet nav */}
       <nav
-        className="flex items-center gap-1 border-t border-border px-5 py-1.5 sm:hidden"
+        className="flex items-center gap-0.5 overflow-x-auto border-t border-border px-5 py-1.5 lg:hidden"
         aria-label="Main mobile"
       >
         {links.map((l) => (
           <Link
             key={l.to}
             to={l.to}
-            className="rounded-md px-2.5 py-1.5 text-sm text-muted-foreground"
+            className="shrink-0 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground"
             activeProps={{ className: "bg-accent text-foreground font-medium" }}
           >
             {l.label}
