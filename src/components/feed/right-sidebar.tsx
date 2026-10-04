@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { UserPlus, UserCheck, TrendingUp, Sparkles } from "lucide-react";
 import { discoverPeople, trendingTopics } from "@/lib/feed-data";
@@ -102,6 +103,7 @@ function TrendingSection() {
 }
 
 function AiDiscovery() {
+  const navigate = useNavigate();
   return (
     <section className="rounded-xl border border-border bg-gradient-to-b from-card to-surface p-4 shadow-subtle">
       <div className="flex items-center gap-2">
@@ -113,7 +115,7 @@ function AiDiscovery() {
       </p>
       <button
         type="button"
-        onClick={() => toast("AI is exploring professionals for you…")}
+        onClick={() => navigate({ to: "/assistant", search: { context: "You've been seeing a lot of interior design and custom furniture in your feed. Want me to find professionals creating similar work in your area?" } })}
         className="mt-3 flex items-center gap-1.5 text-[13px] font-medium text-foreground transition-opacity hover:opacity-70"
       >
         <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />

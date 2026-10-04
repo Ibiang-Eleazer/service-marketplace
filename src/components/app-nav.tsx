@@ -11,6 +11,7 @@ const links = [
   { to: "/requests", label: "Requests" },
   { to: "/messages", label: "Messages" },
   { to: "/library", label: "Library" },
+  { to: "/assistant", label: "Assistant" },
 ] as const;
 
 export function AssistantStatus({

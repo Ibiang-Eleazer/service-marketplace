@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Home, Wrench, MessageSquare, Bookmark, Bell, User, Sparkles } from "lucide-react";
+import { Home, Wrench, MessageSquare, Bookmark, Bell, User } from "lucide-react";
+import { AiMark } from "@/components/ai-mark";
 import { useOnboarding } from "@/lib/onboarding-store";
-import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/home", label: "Home", icon: Home },
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/library", label: "Library", icon: Bookmark },
   { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/assistant", label: "Assistant", aiMark: true },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
@@ -20,7 +21,7 @@ export function LeftSidebar({ onAskAi }: { onAskAi: () => void }) {
   return (
     <nav className="sticky top-14 flex flex-col gap-0.5 py-4" aria-label="Primary">
       {navItems.map((item) => {
-    const Icon = item.icon;
+        const Icon = "icon" in item ? item.icon : null;
         return (
           <Link
             key={item.to}
@@ -28,13 +29,19 @@ export function LeftSidebar({ onAskAi }: { onAskAi: () => void }) {
             className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-foreground data-[status=active]:font-medium"
             activeProps={{ className: "bg-accent text-foreground font-medium" }}
           >
-            <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+            {Icon ? (
+              <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+            ) : item.aiMark ? (
+              <span className="grid h-[18px] w-[18px] shrink-0 place-items-center">
+                <AiMark working={false} size={18} />
+              </span>
+            ) : null}
             <span className="truncate">{item.label}</span>
           </Link>
         );
       })}
 
-      {/* AI entry point — not a tab, an action */}
+      {/* AI quick action */}
       <button
         type="button"
         onClick={onAskAi}

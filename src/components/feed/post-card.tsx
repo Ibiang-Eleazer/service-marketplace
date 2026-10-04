@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   Bookmark,
@@ -25,6 +26,7 @@ function VerifiedBadge({ size = 13 }: { size?: number }) {
 
 function PostMenu({ post, onAskAi }: { post: FeedPost; onAskAi?: () => void }) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   return (
     <div className="relative">
       <button
@@ -40,16 +42,20 @@ function PostMenu({ post, onAskAi }: { post: FeedPost; onAskAi?: () => void }) {
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className="rise-in absolute right-0 top-9 z-20 w-56 rounded-lg border border-border bg-popover p-1.5 shadow-raised">
-            {onAskAi ? (
-              <button
-                type="button"
-                onClick={() => { onAskAi(); setOpen(false); }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-accent"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                Ask AI about this
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                navigate({
+                  to: "/assistant",
+                  search: { context: `You were looking at a post by ${post.author.name}: "${post.text.slice(0, 120)}". What would you like to do with it?` },
+                });
+                setOpen(false);
+              }}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-accent"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+              Ask Assistant about this
+            </button>
             <button
               type="button"
               onClick={() => { toast("Link copied to clipboard"); setOpen(false); }}
@@ -76,7 +82,13 @@ function PostMenu({ post, onAskAi }: { post: FeedPost; onAskAi?: () => void }) {
             {(post.intent === "showcase" || post.intent === "discovery") && post.author.isProvider ? (
               <button
                 type="button"
-                onClick={() => { toast("Finding similar professionals…"); setOpen(false); }}
+                onClick={() => {
+                  navigate({
+                    to: "/assistant",
+                    search: { context: `You were looking at ${post.author.name}'s work: "${post.text.slice(0, 100)}". Want me to find someone who can make something similar?` },
+                  });
+                  setOpen(false);
+                }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-accent"
               >
                 Find someone similar
@@ -85,7 +97,13 @@ function PostMenu({ post, onAskAi }: { post: FeedPost; onAskAi?: () => void }) {
             {(post.intent === "need" || post.intent === "question") && !post.author.isProvider ? (
               <button
                 type="button"
-                onClick={() => { toast("AI is helping you get this done"); setOpen(false); }}
+                onClick={() => {
+                  navigate({
+                    to: "/assistant",
+                    search: { context: `You were looking at a post: "${post.text.slice(0, 100)}". Want me to help get this done?` },
+                  });
+                  setOpen(false);
+                }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-accent"
               >
                 <Sparkles className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
@@ -186,7 +204,7 @@ export function PostCard({ post, onAskAi }: { post: FeedPost; onAskAi?: () => vo
           {post.intent === "showcase" && post.author.isProvider ? (
             <button
               type="button"
-              onClick={() => toast("AI is finding similar professionals for you…")}
+              onClick={() => navigate({ to: "/assistant", search: { context: `You were looking at ${post.author.name}'s work: "${post.text.slice(0, 100)}". Want me to find someone who can make something similar?` } })}
               className="mt-2.5 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
             >
               <span className="grid h-4 w-4 place-items-center rounded-full border border-border-strong text-[8px] font-bold">AI</span>
@@ -196,7 +214,7 @@ export function PostCard({ post, onAskAi }: { post: FeedPost; onAskAi?: () => vo
           {(post.intent === "need" || post.intent === "question") && !post.author.isProvider ? (
             <button
               type="button"
-              onClick={() => toast("AI is helping you get this done…")}
+              onClick={() => navigate({ to: "/assistant", search: { context: `You were looking at a post: "${post.text.slice(0, 100)}". Want me to help get this done?` } })}
               className="mt-2.5 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
             >
               <span className="grid h-4 w-4 place-items-center rounded-full border border-border-strong text-[8px] font-bold">AI</span>
