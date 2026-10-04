@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useRef, useState } from "react";
 import { AppNav, AssistantStatus } from "@/components/app-nav";
-import { Feed, DiscoverPeople } from "@/components/feed/feed";
+import { Feed } from "@/components/feed/feed";
+import { LeftSidebar } from "@/components/feed/left-sidebar";
+import { RightSidebar } from "@/components/feed/right-sidebar";
 import { HandsOffMode } from "@/components/hands-off/hands-off-mode";
 import {
   assistantStateFromWorkflow,
@@ -12,10 +14,8 @@ import { Button } from "@/components/ui-kit";
 import {
   resolveIntent,
   starterPrompts,
-  titleFor,
 } from "@/lib/home-data";
 import { useOnboarding } from "@/lib/onboarding-store";
-import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/home")({
@@ -56,6 +56,8 @@ function Home() {
   const [workflowDecision, setWorkflowDecision] = useState<WorkflowDecision>("pending");
   const handsOffTriggerRef = useRef<HTMLButtonElement>(null);
 
+  const openAi = useCallback(() => setAiOpen(true), []);
+
   const exitHandsOff = useCallback(() => {
     setHandsOff(false);
     requestAnimationFrame(() => handsOffTriggerRef.current?.focus());
@@ -86,8 +88,6 @@ function Home() {
     setWorkflowDecision(decision);
   }, []);
 
-  const discoverReveal = useReveal<HTMLDivElement>(0.12);
-
   return (
     <div className="min-h-screen bg-background">
       <div inert={handsOff} aria-hidden={handsOff || undefined}>
@@ -96,54 +96,23 @@ function Home() {
         statusLabel={working ? "Assistant is working…" : "Assistant ready"}
       />
 
-      <main className="mx-auto w-full max-w-2xl px-5 pb-28 pt-8 md:px-8 md:pt-12">
-        {/* Greeting */}
-        <div className="mb-6">
-          <AssistantStatus
-            working={working}
-            label={working ? "Assistant is working…" : "Assistant ready"}
-            className="rise-in"
-          />
-          <h1
-            className="rise-in mt-4 text-[1.75rem] font-semibold leading-[1.1] text-foreground md:text-[2rem]"
-            style={{ animationDelay: "60ms" }}
-          >
-            {firstName ? `Hello, ${firstName}` : "Welcome back"}
-          </h1>
-          <p
-            className="rise-in mt-1.5 text-sm text-muted-foreground"
-            style={{ animationDelay: "120ms" }}
-          >
-            Discover people, work, and ideas from your network.
-          </p>
+      {/* Three-column layout */}
+      <div className="mx-auto flex w-full max-w-[1400px] gap-0 px-5 md:px-8">
+        {/* Left sidebar */}
+        <div className="hidden w-56 shrink-0 lg:block">
+          <LeftSidebar onAskAi={openAi} />
         </div>
 
-        {/* Feed */}
-        <Feed />
+        {/* Center feed */}
+        <main className="min-w-0 flex-1 border-x border-border">
+          <Feed onAskAi={openAi} />
+        </main>
 
-        {/* Discover people */}
-        <div
-          ref={discoverReveal.ref}
-          data-visible={discoverReveal.visible}
-          className="reveal mt-8"
-        >
-          <DiscoverPeople />
+        {/* Right sidebar */}
+        <div className="hidden w-80 shrink-0 xl:block">
+          <RightSidebar />
         </div>
-      </main>
-
-      {/* AI floating action button */}
-      <button
-        type="button"
-        onClick={() => setAiOpen(true)}
-        aria-label="Ask AI for help"
-        className="rise-in fixed bottom-6 left-1/2 z-30 flex h-12 -translate-x-1/2 items-center gap-2.5 rounded-full border border-border-strong bg-card px-5 shadow-raised transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-panel md:left-auto md:right-6 md:translate-x-0"
-        style={{ animationDelay: "300ms" }}
-      >
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-foreground text-[10px] font-bold text-background">
-          AI
-        </span>
-        <span className="text-sm font-medium text-foreground">What can I get done?</span>
-      </button>
+      </div>
 
       {/* AI panel */}
       {aiOpen ? (
@@ -162,6 +131,7 @@ function Home() {
           onClose={() => setAiOpen(false)}
           onHandsOff={() => setHandsOff(true)}
           handsOffTriggerRef={handsOffTriggerRef}
+          firstName={firstName}
         />
       ) : null}
       </div>
@@ -191,6 +161,7 @@ function AiPanel({
   onClose,
   onHandsOff,
   handsOffTriggerRef,
+  firstName,
 }: {
   draft: string;
   setDraft: (v: string) => void;
@@ -206,6 +177,7 @@ function AiPanel({
   onClose: () => void;
   onHandsOff: () => void;
   handsOffTriggerRef: React.RefObject<HTMLButtonElement | null>;
+  firstName: string;
 }) {
   return (
     <div
@@ -241,6 +213,20 @@ function AiPanel({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4">
+          {/* Greeting */}
+          <div className="mb-4">
+            <AssistantStatus
+              working={working}
+              label={working ? "Assistant is working…" : "Assistant ready"}
+            />
+            <h2 className="mt-3 text-lg font-semibold text-foreground">
+              {firstName ? `${firstName}, what can I get done?` : "What can I get done?"}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Describe it in your own words. I'll figure out what kind of help you need, find the right people, and ask before contacting anyone.
+            </p>
+          </div>
+
           {/* Input */}
           <form
             className={cn(

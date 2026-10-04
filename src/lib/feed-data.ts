@@ -21,250 +21,153 @@ export type FeedPost = {
   liked?: boolean;
   saved?: boolean;
   following?: boolean;
-  intent?: "showcase" | "need" | "question" | "discovery" | "idea";
+  intent?: "showcase" | "need" | "question" | "discovery" | "idea" | "tip" | "behind-scenes";
+  repostedBy?: FeedAuthor;
+  projectMeta?: string;
 };
 
 export const feedAuthors: Record<string, FeedAuthor> = {
-  daniel: {
-    id: "daniel",
-    name: "Daniel Okafor",
-    handle: "@danieljoinery",
-    initials: "DO",
-    title: "Master carpenter · Custom interiors",
-    verified: true,
-    isProvider: true,
-    area: "Lekki, Lagos",
-  },
-  zainab: {
-    id: "zainab",
-    name: "Zainab Bello",
-    handle: "@zainabbello",
-    initials: "ZB",
-    title: "Fashion designer",
-    verified: true,
-    isProvider: true,
-    area: "Surulere, Lagos",
-  },
-  emeka: {
-    id: "emeka",
-    name: "Emeka Udo",
-    handle: "@emekaudo",
-    initials: "EU",
-    title: "Mechanical engineer",
-    isProvider: true,
-    area: "Ogun",
-  },
-  musa: {
-    id: "musa",
-    name: "Musa Garba",
-    handle: "@musagarba",
-    initials: "MG",
-    title: "Classic car mechanic",
-    verified: true,
-    isProvider: true,
-    area: "Kano",
-  },
-  chloe: {
-    id: "chloe",
-    name: "Chloe Adams",
-    handle: "@chloeadams",
-    initials: "CA",
-    title: "Interior enthusiast",
-    isProvider: false,
-    area: "Ikoyi, Lagos",
-  },
-  tomi: {
-    id: "tomi",
-    name: "Tomi Akinrele",
-    handle: "@tomiak",
-    initials: "TA",
-    title: "Homeowner · DIY curious",
-    isProvider: false,
-    area: "Yaba, Lagos",
-  },
-  amara: {
-    id: "amara",
-    name: "Amara Eze",
-    handle: "@amaraeze",
-    initials: "AE",
-    title: "Event planner",
-    isProvider: false,
-    area: "Victoria Island, Lagos",
-  },
+  daniel: { id: "daniel", name: "Daniel Okafor", handle: "@danieljoinery", initials: "DO", title: "Master carpenter · Custom interiors", verified: true, isProvider: true, area: "Lekki, Lagos" },
+  zainab: { id: "zainab", name: "Zainab Bello", handle: "@zainabbello", initials: "ZB", title: "Fashion designer", verified: true, isProvider: true, area: "Surulere, Lagos" },
+  emeka: { id: "emeka", name: "Emeka Udo", handle: "@emekaudo", initials: "EU", title: "Mechanical engineer", isProvider: true, area: "Ogun" },
+  musa: { id: "musa", name: "Musa Garba", handle: "@musagarba", initials: "MG", title: "Classic car mechanic", verified: true, isProvider: true, area: "Kano" },
+  grace: { id: "grace", name: "Grace Adeoye", handle: "@graceadeoye", initials: "GA", title: "Interior designer", isProvider: true, area: "Yaba, Lagos" },
+  nneka: { id: "nneka", name: "Nneka Obi", handle: "@nnekacreates", initials: "NO", title: "Photographer · Visual storyteller", verified: true, isProvider: true, area: "Ikoyi, Lagos" },
+  femi: { id: "femi", name: "Femi Adebayo", handle: "@femibuilds", initials: "FA", title: "Landscaper · Outdoor design", isProvider: true, area: "Lekki, Lagos" },
+  chloe: { id: "chloe", name: "Chloe Adams", handle: "@chloeadams", initials: "CA", title: "Interior enthusiast", isProvider: false, area: "Ikoyi, Lagos" },
+  tomi: { id: "tomi", name: "Tomi Akinrele", handle: "@tomiak", initials: "TA", title: "Homeowner · DIY curious", isProvider: false, area: "Yaba, Lagos" },
+  amara: { id: "amara", name: "Amara Eze", handle: "@amaraeze", initials: "AE", title: "Event planner", isProvider: false, area: "Victoria Island, Lagos" },
+  david: { id: "david", name: "David Okon", handle: "@davidokon", initials: "DK", title: "Real estate developer", isProvider: false, area: "Lekki, Lagos" },
+  sade: { id: "sade", name: "Sade Williams", handle: "@sadewrites", initials: "SW", title: "Writer · Home design lover", isProvider: false, area: "Ikeja, Lagos" },
 };
 
 export const seedPosts: FeedPost[] = [
   {
-    id: "p1",
-    author: feedAuthors.daniel,
+    id: "p1", author: feedAuthors.daniel,
     text: "Finished this floor-to-ceiling wardrobe in Ikoyi last week. Walnut veneer, soft-close sliding doors, and warm LED strips that switch on as the doors open. Two days on site, zero mess left behind.",
     images: [{ src: "/images/work-wardrobe.png", alt: "Built-in walnut and white wardrobe with LED lighting" }],
-    time: "2h",
-    likes: 248,
-    comments: 31,
-    reposts: 12,
-    intent: "showcase",
+    time: "2h", likes: 248, comments: 31, reposts: 12, intent: "showcase", projectMeta: "Custom furniture · Ikoyi",
   },
   {
-    id: "p2",
-    author: feedAuthors.chloe,
+    id: "p2", author: feedAuthors.chloe,
     text: "I want to renovate my living room but I'm not sure what style I want. I love the look of built-in woodwork but I'm worried about the cost. Has anyone done something similar recently? What should I budget?",
-    images: [],
-    time: "4h",
-    likes: 42,
-    comments: 18,
-    reposts: 3,
-    intent: "need",
+    images: [], time: "4h", likes: 42, comments: 18, reposts: 3, intent: "need",
   },
   {
-    id: "p3",
-    author: feedAuthors.zainab,
+    id: "p3", author: feedAuthors.zainab,
     text: "Structured emerald gown for a client's 40th. Hand-finished seams and a hidden ankara lining — she wanted something only she would know about. Eight fittings, one very happy client.",
     images: [{ src: "/images/work-dress.png", alt: "Emerald structured evening dress on a dress form" }],
-    time: "6h",
-    likes: 512,
-    comments: 64,
-    reposts: 40,
-    intent: "showcase",
+    time: "6h", likes: 512, comments: 64, reposts: 40, intent: "showcase", projectMeta: "Fashion design · Surulere",
   },
   {
-    id: "p4",
-    author: feedAuthors.tomi,
+    id: "p4", author: feedAuthors.tomi,
     text: "Does anyone know someone who can repair a leaking kitchen sink? It's been dripping for a week and I'm tired of putting a bucket under it. Somewhere in Yaba ideally.",
-    images: [],
-    time: "8h",
-    likes: 15,
-    comments: 7,
-    reposts: 2,
-    intent: "question",
+    images: [], time: "8h", likes: 15, comments: 7, reposts: 2, intent: "question",
   },
   {
-    id: "p5",
-    author: feedAuthors.emeka,
+    id: "p5", author: feedAuthors.emeka,
     text: "Third iteration of a compact solar pump for small farms. 40% less draw than v2. Looking for two farms in Ogun to pilot it next month. DM if interested — happy to share the spec sheet.",
     images: [{ src: "/images/work-prototype.png", alt: "Solar water pump prototype on a workbench" }],
-    time: "12h",
-    likes: 389,
-    comments: 47,
-    reposts: 58,
-    intent: "showcase",
+    time: "12h", likes: 389, comments: 47, reposts: 58, intent: "showcase", projectMeta: "Engineering · Ogun",
   },
   {
-    id: "p6",
-    author: feedAuthors.amara,
+    id: "p6", author: feedAuthors.amara,
     text: "I love this design. Something like this but for a bedroom — floor-to-ceiling wardrobe with mirror panels. Saving this for when I'm ready to renovate.",
     images: [{ src: "/images/work-wardrobe.png", alt: "Built-in walnut wardrobe inspiration" }],
-    time: "1d",
-    likes: 67,
-    comments: 9,
-    reposts: 5,
-    intent: "discovery",
+    time: "1d", likes: 67, comments: 9, reposts: 5, intent: "discovery",
   },
   {
-    id: "p7",
-    author: feedAuthors.musa,
+    id: "p7", author: feedAuthors.musa,
     text: "Eight months, one very patient owner. This 1986 W124 is back on the road with its original engine rebuilt. Restoration work teaches you patience — every bolt tells a story.",
     images: [{ src: "/images/work-restoration.png", alt: "Restored cream classic sedan in a garage" }],
-    time: "2d",
-    likes: 731,
-    comments: 92,
-    reposts: 76,
-    intent: "showcase",
+    time: "2d", likes: 731, comments: 92, reposts: 76, intent: "showcase", projectMeta: "Restoration · Kano",
   },
   {
-    id: "p8",
-    author: feedAuthors.chloe,
+    id: "p8", author: feedAuthors.chloe,
     text: "Finally got my kitchen cabinets refaced last month. So happy with how it turned out. Sometimes you don't need a full renovation — just fresh doors and new handles.",
     images: [{ src: "/images/work-kitchen.png", alt: "Modern oak kitchen with charcoal base units" }],
-    time: "2d",
-    likes: 124,
-    comments: 22,
-    reposts: 8,
-    intent: "idea",
+    time: "2d", likes: 124, comments: 22, reposts: 8, intent: "idea",
+  },
+  {
+    id: "p9", author: feedAuthors.grace,
+    text: "Before and after on a studio apartment in Yaba. The client wanted \"warm but minimal\" — we went with oak accents, charcoal walls, and a single statement light. Sometimes restraint is the boldest choice.",
+    images: [{ src: "/images/work-kitchen.png", alt: "Modern oak kitchen with charcoal base units" }, { src: "/images/work-wardrobe.png", alt: "Built-in wardrobe matching the kitchen aesthetic" }],
+    time: "3d", likes: 891, comments: 103, reposts: 67, intent: "showcase", projectMeta: "Interior design · Yaba",
+  },
+  {
+    id: "p10", author: feedAuthors.nneka,
+    text: "Shot this table last weekend for a carpenter's portfolio. The grain on this walnut is unreal — natural light, no flash, no filter. If you make things with your hands, document them properly. It changes how people see your work.",
+    images: [{ src: "/images/work-table.png", alt: "Walnut table photographed in natural light" }],
+    time: "3d", likes: 345, comments: 38, reposts: 19, intent: "tip",
+  },
+  {
+    id: "p11", author: feedAuthors.david,
+    text: "Looking for an interior designer for a new 12-unit apartment building in Lekki. Need someone who can handle common areas, finishes, and furnishing packages. This is a real project starting Q1 next year — DM me with portfolio links.",
+    images: [], time: "4d", likes: 89, comments: 34, reposts: 12, intent: "need",
+  },
+  {
+    id: "p12", author: feedAuthors.femi,
+    text: "Behind the scenes on a garden project in Lekki Phase 1. Most people don't realise how much of landscaping is drainage and grading before a single plant goes in. Here's the site after three days of prep — the planting is the easy part.",
+    images: [{ src: "/images/work-prototype.png", alt: "Garden site preparation with drainage work" }],
+    time: "4d", likes: 203, comments: 24, reposts: 8, intent: "behind-scenes", projectMeta: "Landscaping · Lekki",
+  },
+  {
+    id: "p13", author: feedAuthors.sade,
+    text: "Writing a piece on how Nigerian homes are changing — we're moving away from \"sitting room nobody sits in\" toward spaces that actually reflect how we live. If you've recently renovated or designed your home around your life (not visitors), I'd love to talk.",
+    images: [], time: "5d", likes: 156, comments: 41, reposts: 22, intent: "question",
+  },
+  {
+    id: "p14", author: feedAuthors.chloe,
+    text: "Three things I learned from my kitchen refacing: 1) You don't need to replace cabinets — refacing is 60% cheaper and looks just as good. 2) Handles make a bigger difference than you think. 3) Always get three quotes. Always.",
+    images: [], time: "1w", likes: 287, comments: 35, reposts: 44, intent: "idea",
+  },
+  {
+    id: "p15", author: feedAuthors.daniel,
+    text: "Quick tip for anyone considering custom furniture: always ask your carpenter about the wood they're using. \"Hardwood\" isn't specific enough — iroko, mahogany, and walnut all behave differently. A good maker will tell you exactly what you're getting and why.",
+    images: [], time: "1w", likes: 412, comments: 28, reposts: 51, intent: "tip",
+  },
+  {
+    id: "p16", author: feedAuthors.nneka,
+    text: "Working on a series documenting artisans in Lagos. Spent yesterday with a leather worker in Balogun Market who's been making shoes by hand for 30 years. His workshop is the size of a closet and he produces the most beautiful things I've seen. Full feature dropping next week.",
+    images: [{ src: "/images/work-table.png", alt: "Artisan workshop documentary photography" }, { src: "/images/work-prototype.png", alt: "Hands working on leather goods" }, { src: "/images/work-restoration.png", alt: "Finished leather products" }, { src: "/images/work-dress.png", alt: "Detail of hand-stitched leather" }],
+    time: "1w", likes: 678, comments: 81, reposts: 93, intent: "behind-scenes", projectMeta: "Photography · Lagos",
+  },
+  {
+    id: "p17", author: feedAuthors.amara,
+    text: "I keep seeing these wardrobe designs and I think I'm finally ready to pull the trigger. Does anyone have experience with mirror panels on sliding doors? Worried about fingerprints with two kids running around.",
+    images: [{ src: "/images/work-wardrobe.png", alt: "Wardrobe with mirror panels inspiration" }],
+    time: "1w", likes: 34, comments: 12, reposts: 1, intent: "question",
   },
 ];
 
 export type DiscoverPerson = {
-  id: string;
-  name: string;
-  handle: string;
-  initials: string;
-  title: string;
-  area: string;
-  rating?: number;
-  verified?: boolean;
-  isProvider: boolean;
-  image: string;
-  imageAlt: string;
-  followers: string;
+  id: string; name: string; handle: string; initials: string; title: string; area: string;
+  rating?: number; verified?: boolean; isProvider: boolean;
+  image: string; imageAlt: string; followers: string;
 };
 
 export const discoverPeople: DiscoverPerson[] = [
-  {
-    id: "d1",
-    name: "Daniel Okafor",
-    handle: "@danieljoinery",
-    initials: "DO",
-    title: "Master carpenter · Custom interiors",
-    area: "Lekki, Lagos",
-    rating: 4.9,
-    verified: true,
-    isProvider: true,
-    image: "/images/work-wardrobe.png",
-    imageAlt: "Custom wardrobe work",
-    followers: "3.2k",
-  },
-  {
-    id: "d2",
-    name: "Zainab Bello",
-    handle: "@zainabbello",
-    initials: "ZB",
-    title: "Fashion designer",
-    area: "Surulere, Lagos",
-    rating: 4.8,
-    verified: true,
-    isProvider: true,
-    image: "/images/work-dress.png",
-    imageAlt: "Custom evening dress",
-    followers: "5.1k",
-  },
-  {
-    id: "d3",
-    name: "Musa Garba",
-    handle: "@musagarba",
-    initials: "MG",
-    title: "Classic car mechanic",
-    area: "Kano",
-    rating: 4.9,
-    verified: true,
-    isProvider: true,
-    image: "/images/work-restoration.png",
-    imageAlt: "Restored classic car",
-    followers: "8.4k",
-  },
-  {
-    id: "d4",
-    name: "Grace Adeoye",
-    handle: "@graceadeoye",
-    initials: "GA",
-    title: "Interior designer",
-    area: "Yaba, Lagos",
-    rating: 4.7,
-    isProvider: true,
-    image: "/images/work-kitchen.png",
-    imageAlt: "Modern kitchen design",
-    followers: "2.1k",
-  },
+  { id: "d1", name: "Daniel Okafor", handle: "@danieljoinery", initials: "DO", title: "Master carpenter · Custom interiors", area: "Lekki, Lagos", rating: 4.9, verified: true, isProvider: true, image: "/images/work-wardrobe.png", imageAlt: "Custom wardrobe work", followers: "3.2k" },
+  { id: "d2", name: "Zainab Bello", handle: "@zainabbello", initials: "ZB", title: "Fashion designer", area: "Surulere, Lagos", rating: 4.8, verified: true, isProvider: true, image: "/images/work-dress.png", imageAlt: "Custom evening dress", followers: "5.1k" },
+  { id: "d3", name: "Musa Garba", handle: "@musagarba", initials: "MG", title: "Classic car mechanic", area: "Kano", rating: 4.9, verified: true, isProvider: true, image: "/images/work-restoration.png", imageAlt: "Restored classic car", followers: "8.4k" },
+  { id: "d4", name: "Grace Adeoye", handle: "@graceadeoye", initials: "GA", title: "Interior designer", area: "Yaba, Lagos", rating: 4.7, isProvider: true, image: "/images/work-kitchen.png", imageAlt: "Modern kitchen design", followers: "2.1k" },
+  { id: "d5", name: "Nneka Obi", handle: "@nnekacreates", initials: "NO", title: "Photographer · Visual storyteller", area: "Ikoyi, Lagos", verified: true, isProvider: true, image: "/images/work-table.png", imageAlt: "Documentary photography", followers: "4.6k" },
+];
+
+export type TrendingTopic = { id: string; topic: string; posts: string; category: string };
+
+export const trendingTopics: TrendingTopic[] = [
+  { id: "t1", topic: "Custom furniture", posts: "1.2k posts", category: "Popular this week" },
+  { id: "t2", topic: "Home renovation", posts: "890 posts", category: "Popular this week" },
+  { id: "t3", topic: "Fashion design", posts: "2.1k posts", category: "Popular this week" },
+  { id: "t4", topic: "Interior design", posts: "1.5k posts", category: "Popular this week" },
+  { id: "t5", topic: "Classic car restoration", posts: "430 posts", category: "Trending" },
+  { id: "t6", topic: "Solar energy", posts: "670 posts", category: "Trending" },
 ];
 
 export type AppNotification = {
-  id: string;
-  kind: "like" | "comment" | "follow" | "message" | "repost" | "request" | "system";
-  who?: string;
-  whoInitials?: string;
-  text: string;
-  time: string;
-  unread: boolean;
+  id: string; kind: "like" | "comment" | "follow" | "message" | "repost" | "request" | "system";
+  who?: string; whoInitials?: string; text: string; time: string; unread: boolean;
 };
 
 export const seedNotifications: AppNotification[] = [
@@ -278,13 +181,16 @@ export const seedNotifications: AppNotification[] = [
 ];
 
 export const customerProfile = {
-  name: "Chloe Adams",
-  handle: "@chloeadams",
-  initials: "CA",
+  name: "Chloe Adams", handle: "@chloeadams", initials: "CA",
   bio: "Interior enthusiast. Always looking for beautiful ideas and talented people. Based in Ikoyi, Lagos.",
-  area: "Ikoyi, Lagos",
-  posts: 12,
-  followers: 342,
-  following: 89,
-  saved: 24,
+  area: "Ikoyi, Lagos", posts: 12, followers: 342, following: 89, saved: 24,
 };
+
+export const composerPrompts = [
+  "What are you working on?",
+  "Share something interesting.",
+  "Show people what you're creating.",
+  "Need help with something?",
+  "What's happening?",
+  "Share an idea or inspiration.",
+];

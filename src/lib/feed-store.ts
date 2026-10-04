@@ -69,6 +69,9 @@ export const feedStore = {
     state = { ...state, posts: [post, ...state.posts] };
     emit();
   },
+  getFollowedIds() {
+    return state.followedIds;
+  },
   subscribe(l: () => void) {
     listeners.add(l);
     return () => listeners.delete(l);
