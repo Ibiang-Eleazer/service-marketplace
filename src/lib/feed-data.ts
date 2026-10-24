@@ -184,6 +184,7 @@ export const customerProfile = {
   name: "Chloe Adams", handle: "@chloeadams", initials: "CA",
   bio: "Interior enthusiast. Always looking for beautiful ideas and talented people. Based in Ikoyi, Lagos.",
   area: "Ikoyi, Lagos", posts: 12, followers: 342, following: 89, saved: 24,
+  website: "chloe-adams.studio",
 };
 
 export const composerPrompts = [
