@@ -1,17 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import {
-  Bookmark,
-  Heart,
-  Link2,
-  MessageCircle,
-  Pencil,
-  Repeat2,
-  Share2,
-  UserCheck,
-  UserPlus,
-} from "lucide-react";
+import { Link2, Pencil, Share2, UserCheck, UserPlus } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
 import { PostGrid } from "@/components/profile/post-grid";
 import { PostDetailModal } from "@/components/profile/post-detail-modal";
