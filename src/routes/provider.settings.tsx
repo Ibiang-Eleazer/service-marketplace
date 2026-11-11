@@ -4,7 +4,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { PageContainer } from "@/components/provider/provider-shell";
-import { PageHeader, Panel, SectionHeader, btn } from "@/components/provider/primitives";
+import {
+  PageHeader,
+  Panel,
+  SectionHeader,
+  btn,
+} from "@/components/provider/primitives";
+import { PRO_PRICE_LABEL } from "@/lib/assistant-plans";
 import { provider } from "@/lib/provider-data";
 import { providerStore, useProvider } from "@/lib/provider-store";
 import { cn } from "@/lib/utils";
@@ -18,50 +24,93 @@ const plans = [
     key: "free" as const,
     name: "Free",
     price: "₦0",
-    features: ["Requests, jobs & calendar", "Messages & payouts", "Professional feed", "Basic analytics", "12% platform fee"],
+    features: [
+      "Requests, jobs & calendar",
+      "Messages & payouts",
+      "Professional feed",
+      "Basic analytics",
+      "12% platform fee",
+    ],
   },
   {
     key: "pro" as const,
     name: "Pro",
-    price: "₦9,500/mo",
-    features: ["Everything in Free", "AI Assistant & Hands-off mode", "Advanced analytics & insights", "Priority in local search", "8% platform fee"],
+    price: PRO_PRICE_LABEL,
+    features: [
+      "Everything in Free",
+      "AI Assistant & Hands-off mode",
+      "Advanced analytics & insights",
+      "Priority in local search",
+      "8% platform fee",
+    ],
   },
 ];
 
-const notificationPrefs = ["New requests", "Messages", "Booking changes", "Payouts", "Feed activity"];
+const notificationPrefs = [
+  "New requests",
+  "Messages",
+  "Booking changes",
+  "Payouts",
+  "Feed activity",
+];
 
 function SettingsPage() {
   const { plan } = useProvider();
   const [notify, setNotify] = useState<Record<string, boolean>>(
-    Object.fromEntries(notificationPrefs.map((n) => [n, n !== "Feed activity"])),
+    Object.fromEntries(
+      notificationPrefs.map((n) => [n, n !== "Feed activity"]),
+    ),
   );
 
   return (
     <PageContainer>
-      <PageHeader title="Settings" description="Plan, notifications and service area." />
+      <PageHeader
+        title="Settings"
+        description="Plan, notifications and service area."
+      />
 
       <section aria-labelledby="plan-title" className="mt-6">
-        <SectionHeader id="plan-title" title="Plan" description="Switch anytime. Changes apply immediately." />
+        <SectionHeader
+          id="plan-title"
+          title="Plan"
+          description="Switch anytime. Changes apply immediately."
+        />
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {plans.map((p) => {
             const current = plan === p.key;
             return (
-              <Panel key={p.key} as="div" className={cn("flex flex-col p-5", current && "ring-2 ring-foreground")}>
+              <Panel
+                key={p.key}
+                as="div"
+                className={cn(
+                  "flex flex-col p-5",
+                  current && "ring-2 ring-foreground",
+                )}
+              >
                 <div className="flex items-baseline justify-between">
                   <p className="text-base font-semibold">{p.name}</p>
-                  <p className="text-sm font-semibold tabular-nums">{p.price}</p>
+                  <p className="text-sm font-semibold tabular-nums">
+                    {p.price}
+                  </p>
                 </div>
                 <ul className="mt-4 flex flex-1 flex-col gap-2">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2 text-[13px]">
-                      <Check className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" /> {f}
+                      <Check
+                        className="h-3.5 w-3.5 text-muted-foreground"
+                        aria-hidden="true"
+                      />{" "}
+                      {f}
                     </li>
                   ))}
                 </ul>
                 <button
                   type="button"
                   disabled={current}
-                  className={cn(current ? btn.secondary : btn.primary, "mt-5 h-9")}
+                  className={cn(
+                    current ? btn.secondary : btn.primary,
+                    "mt-5 h-9",
+                  )}
                   onClick={() => {
                     providerStore.setPlan(p.key);
                     toast.success(`You're on ${p.name}`);
@@ -80,11 +129,18 @@ function SettingsPage() {
           <SectionHeader id="notif-title" title="Notifications" />
           <ul className="mt-3">
             {notificationPrefs.map((n) => (
-              <li key={n} className="flex items-center justify-between border-t border-border py-2.5 first:border-t-0">
+              <li
+                key={n}
+                className="flex items-center justify-between border-t border-border py-2.5 first:border-t-0"
+              >
                 <label htmlFor={`n-${n}`} className="text-[13px]">
                   {n}
                 </label>
-                <Switch id={`n-${n}`} checked={notify[n]} onCheckedChange={(v) => setNotify((s) => ({ ...s, [n]: v }))} />
+                <Switch
+                  id={`n-${n}`}
+                  checked={notify[n]}
+                  onCheckedChange={(v) => setNotify((s) => ({ ...s, [n]: v }))}
+                />
               </li>
             ))}
           </ul>
@@ -103,7 +159,9 @@ function SettingsPage() {
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Also covers</dt>
-              <dd className="text-right font-medium">Ikoyi, VI, Ajah, Ikeja GRA</dd>
+              <dd className="text-right font-medium">
+                Ikoyi, VI, Ajah, Ikeja GRA
+              </dd>
             </div>
           </dl>
           <button type="button" className={cn(btn.secondary, "mt-4")}>
