@@ -7,11 +7,35 @@ import {
   assistantStateFromWorkflow,
   type WorkflowDecision,
 } from "@/lib/assistant-state";
+import {
+  TaskPlan,
+  type TaskPlanHandlers,
+} from "@/components/assistant/task-plan";
 import { RequestWorkflow } from "@/components/request-workflow";
 import { Button } from "@/components/ui-kit";
-import { resolveIntent, starterPrompts } from "@/lib/home-data";
+import {
+  addInformation,
+  answerQuestion,
+  attemptContact,
+  classifyRequest,
+  createTask,
+  decideApproval,
+  editGoal,
+  requestContact,
+  retryStep,
+  runCompareStep,
+  runSearchStep,
+  type AssistantTask,
+} from "@/lib/assistant-task";
+import { intents, starterPrompts } from "@/lib/home-data";
+import { searchSampleListings } from "@/lib/provider-search";
 import { useOnboarding } from "@/lib/onboarding-store";
 import { cn } from "@/lib/utils";
+
+const NOT_SENT_MESSAGE =
+  "Sending requests isn't connected in this prototype, so nothing was sent.";
+const NO_GENERAL_ANSWERS =
+  "I can't answer general questions yet. I can find, compare and plan local professionals for home jobs.";
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({
@@ -19,12 +43,14 @@ export const Route = createFileRoute("/assistant")({
       { title: "Assistant — Brand" },
       {
         name: "description",
-        content: "Talk to your AI assistant. Find professionals, get help, turn ideas into action.",
+        content:
+          "Talk to your AI assistant. Find professionals, get help, turn ideas into action.",
       },
       { property: "og:title", content: "Assistant — Brand" },
       {
         property: "og:description",
-        content: "Talk to your AI assistant. Find professionals, get help, turn ideas into action.",
+        content:
+          "Talk to your AI assistant. Find professionals, get help, turn ideas into action.",
       },
     ],
   }),
@@ -42,20 +68,25 @@ type ConversationState = "idle" | "listening" | "working";
 function AssistantPage() {
   const { customer } = useOnboarding();
   const firstName = customer.name.trim().split(" ")[0];
-  const context = Route.useSearch({ select: (s) => (s as { context?: string })?.context });
+  const context = Route.useSearch({
+    select: (s) => (s as { context?: string })?.context,
+  });
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [prompt, setPrompt] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [conversationState, setConversationState] = useState<ConversationState>("idle");
+  const [conversationState, setConversationState] =
+    useState<ConversationState>("idle");
   const workflowRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [handsOff, setHandsOff] = useState(false);
   const [workflowStage, setWorkflowStage] = useState<number | null>(null);
-  const [workflowDecision, setWorkflowDecision] = useState<WorkflowDecision>("pending");
+  const [workflowDecision, setWorkflowDecision] =
+    useState<WorkflowDecision>("pending");
+  const [task, setTask] = useState<AssistantTask | null>(null);
   const handsOffTriggerRef = useRef<HTMLButtonElement>(null);
   const contextConsumed = useRef(false);
 
@@ -68,34 +99,105 @@ function AssistantPage() {
     const value = text.trim();
     if (!value) return;
 
-    const userMsg: Message = { id: `u-${Date.now()}`, role: "user", text: value };
+    const userMsg: Message = {
+      id: `u-${Date.now()}`,
+      role: "user",
+      text: value,
+    };
     setMessages((prev) => [...prev, userMsg]);
     setDraft("");
 
-    const intent = resolveIntent(value);
-    void intent;
+    if (task?.question) {
+      applyTask(answerQuestion(task, value, intents), value);
+      return;
+    }
+
+    if (task?.mode === "planned") {
+      applyTask(addInformation(task, value, intents), value);
+      return;
+    }
+
+    const fresh = createTask(value, intents);
+    const merged = task ? addInformation(task, value, intents) : null;
+    applyTask(merged?.mode === "planned" ? merged : fresh, value);
+  }
+
+  function applyTask(next: AssistantTask, value: string) {
+    setTask(next);
+
+    if (next.question) {
+      appendAssistant(next.question.text);
+      return;
+    }
+
+    if (next.mode === "planned") {
+      appendAssistant("I've turned this into a plan. Review the steps below.");
+      return;
+    }
+
+    if (classifyRequest(next.goal, intents, next.answers).trades.length === 0) {
+      appendAssistant(NO_GENERAL_ANSWERS);
+      return;
+    }
 
     setConversationState("working");
     setWorking(true);
 
-    // Simulate assistant acknowledging before starting the workflow
     setTimeout(() => {
-      const ackMsg: Message = {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        text: "Let me help with that. I'll figure out what you need and find the right people.",
-      };
-      setMessages((prev) => [...prev, ackMsg]);
+      appendAssistant(
+        "Let me help with that. I'll figure out what you need and find the right people.",
+      );
       setPrompt(value);
       setWorkflowStage(0);
       setWorkflowDecision("pending");
       setConversationState("idle");
       requestAnimationFrame(() => {
-        workflowRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+        workflowRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+        scrollRef.current?.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: "smooth",
+        });
       });
     }, 800);
   }
+
+  function appendAssistant(text: string) {
+    setMessages((prev) => [
+      ...prev,
+      { id: `a-${Date.now()}-${prev.length}`, role: "assistant", text },
+    ]);
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    });
+  }
+
+  function mutateTask(change: (current: AssistantTask) => AssistantTask) {
+    setTask((current) => (current ? change(current) : current));
+  }
+
+  const planHandlers: TaskPlanHandlers = {
+    onRunStep: (stepId) =>
+      mutateTask((t) => {
+        const step = t.steps.find((s) => s.id === stepId);
+        return step?.kind === "compare"
+          ? runCompareStep(t)
+          : runSearchStep(t, stepId, searchSampleListings);
+      }),
+    onRetryStep: (stepId) => mutateTask((t) => retryStep(t, stepId)),
+    onRequestContact: (recipient) =>
+      mutateTask((t) => requestContact(t, recipient)),
+    onDecideApproval: (approvalId, decision) =>
+      mutateTask((t) => decideApproval(t, approvalId, decision)),
+    onAttemptContact: (approvalId) =>
+      mutateTask((t) => attemptContact(t, approvalId, NOT_SENT_MESSAGE)),
+    onEditGoal: (goal) => mutateTask((t) => editGoal(t, goal, intents)),
+  };
 
   const handleStage = useCallback((stage: number) => {
     setWorking(stage < 7);
@@ -108,13 +210,17 @@ function AssistantPage() {
     const outcomeMsg: Message = {
       id: `a-done-${Date.now()}`,
       role: "assistant",
-      text: decision === "approved"
-        ? "I'll contact them now. You'll get a message when they respond."
-        : "No problem. I'll keep this ready for whenever you decide.",
+      text:
+        decision === "approved"
+          ? NOT_SENT_MESSAGE
+          : "No problem. I'll keep this ready for whenever you decide.",
     };
     setMessages((prev) => [...prev, outcomeMsg]);
     requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     });
   }, []);
 
@@ -133,168 +239,188 @@ function AssistantPage() {
   return (
     <div className="min-h-screen bg-background">
       <div inert={handsOff} aria-hidden={handsOff || undefined}>
-      <AppNav
-        working={working}
-        statusLabel={working ? "Assistant is working…" : "Assistant ready"}
-      />
+        <AppNav
+          working={working}
+          statusLabel={working ? "Assistant is working…" : "Assistant ready"}
+        />
 
-      {/* Three-column layout matching Home */}
-      <div className="mx-auto flex w-full max-w-[1400px] gap-0 px-5 md:px-8">
-        {/* Left spacer to align with feed layout */}
-        <div className="hidden w-56 shrink-0 lg:block" />
+        {/* Three-column layout matching Home */}
+        <div className="mx-auto flex w-full max-w-[1400px] gap-0 px-5 md:px-8">
+          {/* Left spacer to align with feed layout */}
+          <div className="hidden w-56 shrink-0 lg:block" />
 
-        {/* Center — conversation workspace */}
-        <main className="flex min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 flex-col border-x border-border">
-          {/* Header */}
-          <div className="sticky top-14 z-10 border-b border-border bg-background/85 px-6 py-4 backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-              <span className="grid h-8 w-8 place-items-center rounded-full border border-border-strong bg-card">
-                <AiMark working={working} size={16} />
-              </span>
-              <div>
-                <h1 className="text-[15px] font-semibold text-foreground">Assistant</h1>
-                <p className="text-xs text-muted-foreground">
-                  {working ? "Working on your request…" : "Ask me anything, or describe what you need done"}
-                </p>
-              </div>
-              <div className="ml-auto">
-                <AssistantStatus
-                  working={working}
-                  label={working ? "Working…" : "Ready"}
-                  className="hidden sm:inline-flex"
-                />
+          {/* Center — conversation workspace */}
+          <main className="flex min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 flex-col border-x border-border">
+            {/* Header */}
+            <div className="sticky top-14 z-10 border-b border-border bg-background/85 px-6 py-4 backdrop-blur-xl">
+              <div className="flex items-center gap-3">
+                <span className="grid h-8 w-8 place-items-center rounded-full border border-border-strong bg-card">
+                  <AiMark working={working} size={16} />
+                </span>
+                <div>
+                  <h1 className="text-[15px] font-semibold text-foreground">
+                    Assistant
+                  </h1>
+                  <p className="text-xs text-muted-foreground">
+                    {working
+                      ? "Working on your request…"
+                      : "Ask me anything, or describe what you need done"}
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <AssistantStatus
+                    working={working}
+                    label={working ? "Working…" : "Ready"}
+                    className="hidden sm:inline-flex"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Conversation scroll area */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-2xl px-4 py-6 md:px-6">
-              {/* Empty state — greeting + suggestions */}
-              {messages.length === 0 && !context ? (
-                <div className="rise-in flex flex-col items-center justify-center py-12 text-center">
-                  <span className="grid h-14 w-14 place-items-center rounded-full border border-border-strong bg-card shadow-subtle">
-                    <AiMark working={false} size={28} />
-                  </span>
-                  <h2 className="mt-5 text-xl font-semibold text-foreground">
-                    {firstName ? `Hi ${firstName}.` : "Hi there."}
-                  </h2>
-                  <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                    I can help you find professionals, understand a problem, turn an idea into a task, or explore work from people on the platform.
-                  </p>
-                  <div className="mt-6 flex flex-wrap justify-center gap-2">
-                    {starterPrompts.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => submit(s)}
-                        className="rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground shadow-subtle transition-[transform,color,border-color,box-shadow] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground hover:shadow-panel"
-                      >
-                        {s}
-                      </button>
+            {/* Conversation scroll area */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto">
+              <div className="mx-auto max-w-2xl px-4 py-6 md:px-6">
+                {/* Empty state — greeting + suggestions */}
+                {messages.length === 0 && !context ? (
+                  <div className="rise-in flex flex-col items-center justify-center py-12 text-center">
+                    <span className="grid h-14 w-14 place-items-center rounded-full border border-border-strong bg-card shadow-subtle">
+                      <AiMark working={false} size={28} />
+                    </span>
+                    <h2 className="mt-5 text-xl font-semibold text-foreground">
+                      {firstName ? `Hi ${firstName}.` : "Hi there."}
+                    </h2>
+                    <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                      I can help you find professionals, understand a problem,
+                      turn an idea into a task, or explore work from people on
+                      the platform.
+                    </p>
+                    <div className="mt-6 flex flex-wrap justify-center gap-2">
+                      {starterPrompts.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => submit(s)}
+                          className="rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground shadow-subtle transition-[transform,color,border-color,box-shadow] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground hover:shadow-panel"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Context message (from feed) */}
+                {context &&
+                messages.length > 0 &&
+                messages[0]?.text === context ? (
+                  <div className="rise-in mb-4 rounded-lg border border-border bg-surface px-4 py-3">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      From the feed
+                    </p>
+                    <p className="mt-1.5 text-sm text-foreground">{context}</p>
+                  </div>
+                ) : null}
+
+                {/* Messages */}
+                {messages.length > 0 ? (
+                  <div className="flex flex-col gap-4">
+                    {messages.map((msg) => (
+                      <MessageBubble key={msg.id} msg={msg} />
                     ))}
                   </div>
-                </div>
-              ) : null}
+                ) : null}
 
-              {/* Context message (from feed) */}
-              {context && messages.length > 0 && messages[0]?.text === context ? (
-                <div className="rise-in mb-4 rounded-lg border border-border bg-surface px-4 py-3">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    From the feed
-                  </p>
-                  <p className="mt-1.5 text-sm text-foreground">{context}</p>
-                </div>
-              ) : null}
+                {task?.mode === "planned" ? (
+                  <div className="mt-4">
+                    <TaskPlan task={task} handlers={planHandlers} />
+                  </div>
+                ) : null}
 
-              {/* Messages */}
-              {messages.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {messages.map((msg) => (
-                    <MessageBubble key={msg.id} msg={msg} />
-                  ))}
+                {/* Workflow output */}
+                <div ref={workflowRef} className="mt-4">
+                  {prompt ? (
+                    <RequestWorkflow
+                      key={prompt}
+                      prompt={prompt}
+                      onStage={handleStage}
+                      onDecision={handleDecision}
+                    />
+                  ) : null}
                 </div>
-              ) : null}
 
-              {/* Workflow output */}
-              <div ref={workflowRef} className="mt-4">
-                {prompt ? (
-                  <RequestWorkflow
-                    key={prompt}
-                    prompt={prompt}
-                    onStage={handleStage}
-                    onDecision={handleDecision}
-                  />
+                {/* Listening indicator */}
+                {conversationState === "listening" ? (
+                  <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                    <AiMark working size={16} />
+                    <AiWave />
+                  </div>
                 ) : null}
               </div>
-
-              {/* Listening indicator */}
-              {conversationState === "listening" ? (
-                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                  <AiMark working size={16} />
-                  <AiWave />
-                </div>
-              ) : null}
             </div>
-          </div>
 
-          {/* Input bar — sticky at bottom of conversation */}
-          <div className="sticky bottom-0 border-t border-border bg-background/85 px-4 py-3 backdrop-blur-xl md:px-6">
-            <div className="mx-auto max-w-2xl">
-              <form
-                className={cn(
-                  "flex items-end gap-2 rounded-xl border bg-card px-3 py-2 shadow-subtle transition-[box-shadow,border-color] duration-300",
-                  focused ? "border-border-strong shadow-panel" : "border-border",
-                )}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  submit(draft);
-                }}
-              >
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-foreground text-[8px] font-bold text-background">
-                  AI
-                </span>
-                <textarea
-                  ref={inputRef}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onFocus={() => setFocused(true)}
-                  onBlur={() => setFocused(false)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      submit(draft);
-                    }
+            {/* Input bar — sticky at bottom of conversation */}
+            <div className="sticky bottom-0 border-t border-border bg-background/85 px-4 py-3 backdrop-blur-xl md:px-6">
+              <div className="mx-auto max-w-2xl">
+                <form
+                  className={cn(
+                    "flex items-end gap-2 rounded-xl border bg-card px-3 py-2 shadow-subtle transition-[box-shadow,border-color] duration-300",
+                    focused
+                      ? "border-border-strong shadow-panel"
+                      : "border-border",
+                  )}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    submit(draft);
                   }}
-                  rows={1}
-                  placeholder="Describe what you need…"
-                  className="min-h-7 max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    ref={handsOffTriggerRef}
-                    type="button"
-                    onClick={() => setHandsOff(true)}
-                    aria-label="Switch to hands-off mode"
-                    className="inline-flex h-8 items-center rounded-md border border-border px-2.5 text-xs text-muted-foreground transition-colors hover:border-border-strong hover:bg-accent hover:text-foreground"
-                  >
-                    Hands-off
-                  </button>
-                  <Button type="submit" disabled={!draft.trim()} aria-label="Send message">
-                    Send <span aria-hidden="true">→</span>
-                  </Button>
-                </div>
-              </form>
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                I'll always ask before contacting anyone
-              </p>
+                >
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-foreground text-[8px] font-bold text-background">
+                    AI
+                  </span>
+                  <textarea
+                    ref={inputRef}
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        submit(draft);
+                      }
+                    }}
+                    rows={1}
+                    placeholder="Describe what you need…"
+                    className="min-h-7 max-h-32 flex-1 resize-none bg-transparent text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      ref={handsOffTriggerRef}
+                      type="button"
+                      onClick={() => setHandsOff(true)}
+                      aria-label="Switch to hands-off mode"
+                      className="inline-flex h-8 items-center rounded-md border border-border px-2.5 text-xs text-muted-foreground transition-colors hover:border-border-strong hover:bg-accent hover:text-foreground"
+                    >
+                      Hands-off
+                    </button>
+                    <Button
+                      type="submit"
+                      disabled={!draft.trim()}
+                      aria-label="Send message"
+                    >
+                      Send <span aria-hidden="true">→</span>
+                    </Button>
+                  </div>
+                </form>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  I'll always ask before contacting anyone
+                </p>
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
 
-        {/* Right spacer */}
-        <div className="hidden w-80 shrink-0 xl:block" />
-      </div>
+          {/* Right spacer */}
+          <div className="hidden w-80 shrink-0 xl:block" />
+        </div>
       </div>
 
       <HandsOffMode
