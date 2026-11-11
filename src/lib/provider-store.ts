@@ -23,7 +23,7 @@ type State = {
 };
 
 const initial: State = {
-  plan: "pro",
+  plan: "free",
   availability: "available",
   jobs: seedJobs,
   aiMode: "assist",
